@@ -55,8 +55,8 @@ test("an edit against text the file no longer holds is refused", () => {
   assert.equal(result.html, undefined);
 });
 
-test("an element holding markup is refused rather than flattened", () => {
-  const withMarkup = "<p>a goal and a <strong>promise</strong></p>";
+test("an element holding markup the reviewer cannot write is refused rather than flattened", () => {
+  const withMarkup = '<p>a goal and a <span class="badge">promise</span></p>';
   const result = applyTextEdit(withMarkup, {
     tag: "p",
     index: 0,
@@ -67,6 +67,19 @@ test("an element holding markup is refused rather than flattened", () => {
   assert.equal(result.error, "not_text_only");
 });
 
+test("an element built of editable tags is editable, markup and all", () => {
+  const withMarkup = "<p>a goal and a <strong>promise</strong></p>";
+  const result = applyTextEdit(withMarkup, {
+    tag: "p",
+    index: 0,
+    before: "a goal and a promise",
+    after: "a goal and an <em>intention</em>",
+  });
+
+  assert.equal(result.error, undefined);
+  assert.equal(result.html, "<p>a goal and an <em>intention</em></p>");
+});
+
 test("a missing element, a void element and a bad target are all refused", () => {
   assert.equal(applyTextEdit(page, { tag: "h1", index: 7, before: "x", after: "y" }).error, "not_found");
   assert.equal(applyTextEdit(page, { tag: "br", index: 0, before: "x", after: "y" }).error, "not_editable");
@@ -75,16 +88,125 @@ test("a missing element, a void element and a bad target are all refused", () =>
   assert.equal(applyTextEdit(page, { tag: "h1", index: 0, before: "Data Profiler" }).error, "bad_text");
 });
 
-test("markup characters typed into the text are escaped, not injected", () => {
+test("markup characters typed into the text stay escaped", () => {
+  // What a browser sends for a typed `<script>` is already the escaped form; it must survive as
+  // text rather than being decoded into a tag on the way to the file.
   const result = applyTextEdit(page, {
     tag: "h1",
     index: 0,
     before: "Data Profiler",
-    after: "Profiler <script>alert(1)</script> & co",
+    after: "Profiler &lt;script&gt;alert(1)&lt;/script&gt; &amp; co",
   });
 
   assert.ok(result.html.includes("<h1>Profiler &lt;script&gt;alert(1)&lt;/script&gt; &amp; co</h1>"));
   assert.equal(escapeArtifactText("a < b & c > d"), "a &lt; b &amp; c &gt; d");
+});
+
+test("a tag the reviewer may not write is stripped to the words inside it", () => {
+  const result = applyTextEdit(page, {
+    tag: "h1",
+    index: 0,
+    before: "Data Profiler",
+    after: '<script>alert(1)</script><img src="x"><b>Data</b> <span style="color:red">Profiler</span>',
+  });
+
+  assert.equal(result.html.includes("<script"), false);
+  assert.equal(result.html.includes("<img"), false);
+  assert.equal(result.html.includes("<span"), false);
+  assert.ok(result.html.includes("<h1>alert(1)<b>Data</b> Profiler</h1>"));
+});
+
+test("turning a paragraph into a list replaces the element itself", () => {
+  const result = applyTextEdit(page, {
+    tag: "p",
+    index: 1,
+    before: "Every question has started the same way.",
+    after: "<ul><li>Every question</li><li>has started the same way.</li></ul>",
+    scope: "outer",
+  });
+
+  assert.equal(result.error, undefined);
+  assert.ok(result.html.includes("<ul><li>Every question</li><li>has started the same way.</li></ul>"));
+  assert.equal(result.html.includes("<p>Every question has started"), false);
+  assert.ok(result.html.includes('<p class="dek">'), "the paragraph before it is untouched");
+});
+
+test("a list is editable in turn, and converts back to the tag it came from", () => {
+  const listed = "<div><ul><li>one</li><li>two</li></ul></div>";
+  const inner = applyTextEdit(listed, {
+    tag: "ul",
+    index: 0,
+    before: "onetwo",
+    after: "<li>one</li><li>two</li><li>three</li>",
+  });
+  assert.equal(inner.html, "<div><ul><li>one</li><li>two</li><li>three</li></ul></div>");
+
+  const back = applyTextEdit(listed, {
+    tag: "ul",
+    index: 0,
+    before: "onetwo",
+    after: "<p>one<br>two</p>",
+    scope: "outer",
+  });
+  assert.equal(back.html, "<div><p>one<br>two</p></div>", "a list the file already held goes back to a paragraph");
+});
+
+test("an outer edit may only produce a list or the tag that was already there", () => {
+  const rejected = applyTextEdit(page, {
+    tag: "h1",
+    index: 0,
+    before: "Data Profiler",
+    after: "<section>Data Profiler</section>",
+    scope: "outer",
+  });
+  assert.equal(rejected.error, "bad_root");
+
+  const two = applyTextEdit(page, {
+    tag: "h1",
+    index: 0,
+    before: "Data Profiler",
+    after: "<ul><li>a</li></ul><ul><li>b</li></ul>",
+    scope: "outer",
+  });
+  assert.equal(two.error, "bad_root");
+
+  const same = applyTextEdit(page, {
+    tag: "h1",
+    index: 0,
+    before: "Data Profiler",
+    after: "<h1>The <em>Data</em> Profiler</h1>",
+    scope: "outer",
+  });
+  assert.equal(same.html.includes("<h1>The <em>Data</em> Profiler</h1>"), true);
+});
+
+test("a link keeps only a safe href", () => {
+  const safe = applyTextEdit(page, {
+    tag: "h1",
+    index: 0,
+    before: "Data Profiler",
+    after: '<a href="https://example.com" onclick="steal()" class="x">Data Profiler</a>',
+  });
+  assert.ok(safe.html.includes('<h1><a href="https://example.com">Data Profiler</a></h1>'));
+
+  const unsafe = applyTextEdit(page, {
+    tag: "h1",
+    index: 0,
+    before: "Data Profiler",
+    after: '<a href="javascript:steal()">Data Profiler</a>',
+  });
+  assert.ok(unsafe.html.includes("<h1><a>Data Profiler</a></h1>"), "the link stays, the code does not");
+});
+
+test("the markup actually written is reported back", () => {
+  const result = applyTextEdit(page, {
+    tag: "h1",
+    index: 0,
+    before: "Data Profiler",
+    after: '<b>Data</b> <span class="x">Profiler</span>',
+  });
+
+  assert.equal(result.markup, "<b>Data</b> Profiler");
 });
 
 test("an edited entity survives the round trip", () => {

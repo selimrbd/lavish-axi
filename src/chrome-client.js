@@ -1878,13 +1878,20 @@ async function saveTextEdit(msg) {
     const response = await fetch("/api/" + key + "/text-edit", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ tag: msg.tag, index: msg.index, before: msg.before, after: msg.after }),
+      body: JSON.stringify({
+        tag: msg.tag,
+        index: msg.index,
+        before: msg.before,
+        after: msg.after,
+        scope: msg.scope,
+      }),
     });
     const data = await response.json().catch(() => ({}));
     postToFrame({
       type: "lavish:textEditResult",
       ok: response.ok,
       error: data.error || (response.ok ? "" : "save failed"),
+      markup: typeof data.markup === "string" ? data.markup : "",
     });
   } catch {
     postToFrame({ type: "lavish:textEditResult", ok: false, error: "request failed" });

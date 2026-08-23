@@ -78,7 +78,16 @@ function createElement(tag) {
     // by class, so a class match over the children is all the stub owes it.
     querySelectorAll(selector) {
       const wanted = String(selector).replace(/^\./, "");
-      return element.children.filter((child) => child.className === wanted);
+      if (String(selector).startsWith(".")) return element.children.filter((child) => child.className === wanted);
+      return element.children.filter((child) => child.tagName === wanted.toUpperCase());
+    },
+    replaceWith(next) {
+      const parent = element.parentElement;
+      if (!parent) return;
+      const index = parent.children.indexOf(element);
+      if (index >= 0) parent.children.splice(index, 1, next);
+      next.parentElement = parent;
+      element.parentElement = null;
     },
     getBoundingClientRect() {
       return { left: 10, top: 10, right: 110, bottom: 40, width: 100, height: 30 };
@@ -227,6 +236,18 @@ function bootSdk() {
         listener.handler({ key, target: target || body, preventDefault: () => (prevented = true) });
       }
       return prevented;
+    },
+    toolbar() {
+      return documentElement.children
+        .flatMap((child) => child.shadowRoot?.children || [])
+        .find((child) => child.className === "lavish-edit-toolbar");
+    },
+    tool(id) {
+      const bar = this.toolbar();
+      assert.ok(bar, "editing opens the toolbar");
+      const button = bar.children.find((child) => child.getAttribute("data-tool") === id);
+      assert.ok(button, `the toolbar offers "${id}"`);
+      return button;
     },
     setDocumentQuery(query) {
       documentQuery = query;
@@ -475,6 +496,7 @@ test("the served SDK bundle drops a late restore once the user has opened a card
 function editableParagraph(sdk, text) {
   const paragraph = appendTo(sdk.body, createElement("p"));
   paragraph.textContent = text;
+  paragraph.innerHTML = text;
   paragraph.childNodes = [{ nodeType: 3, textContent: text }];
   return paragraph;
 }
@@ -503,7 +525,7 @@ test("clicking an element edits it in place while edit is armed", () => {
 
   sdk.edit(paragraph);
 
-  assert.equal(paragraph.getAttribute("contenteditable"), "plaintext-only");
+  assert.equal(paragraph.getAttribute("contenteditable"), "true");
   assert.equal(paragraph.getAttribute("data-lavish-editing"), "true");
   assert.equal(sdk.cards().length, 0, "editing never opens an annotation card");
 });
@@ -546,12 +568,69 @@ test("a bare a or e asks the chrome to switch mode, unless it is being typed", (
   assert.equal(sdk.posted.length, before, "a letter typed into a field is just a letter");
 });
 
+test("editing opens a toolbar of the tools the file can hold", () => {
+  const sdk = bootSdk();
+  const paragraph = editableParagraph(sdk, "The goal of the tool");
+
+  sdk.edit(paragraph);
+
+  assert.deepEqual(
+    sdk
+      .toolbar()
+      .children.filter((child) => child.tagName === "BUTTON")
+      .map((child) => child.getAttribute("data-tool")),
+    ["ul", "ol", "bold", "italic", "link"],
+  );
+
+  paragraph.listeners.find((entry) => entry.type === "keydown").handler({ key: "Escape", preventDefault() {} });
+  assert.equal(sdk.toolbar(), undefined, "the toolbar goes when the edit does");
+});
+
+test("bullets turn the block into a list, and the file is asked to replace the element", () => {
+  const sdk = bootSdk();
+  const paragraph = editableParagraph(sdk, "Profile a source");
+  paragraph.innerHTML = "Profile a source<br>Review each field";
+
+  sdk.edit(paragraph);
+  sdk.tool("ul").onclick();
+
+  const list = sdk.body.children.at(-1);
+  assert.equal(list.tagName, "UL");
+  assert.equal(list.innerHTML, "<li>Profile a source</li><li>Review each field</li>");
+  assert.equal(list.getAttribute("contenteditable"), "true", "editing carries on in the new element");
+  assert.equal(sdk.tool("ul").getAttribute("aria-pressed"), "true");
+
+  list.listeners
+    .find((entry) => entry.type === "keydown")
+    .handler({ key: "Enter", shiftKey: false, metaKey: true, preventDefault() {} });
+
+  const message = sdk.posted.at(-1);
+  assert.equal(message.type, "lavish:textEdit");
+  assert.equal(message.tag, "p", "the patch travels under the identity the edit began with");
+  assert.equal(message.scope, "outer");
+  assert.equal(message.after, "<ul><li>Profile a source</li><li>Review each field</li></ul>");
+});
+
+test("a saved edit is re-rendered from what the file now holds", () => {
+  const sdk = bootSdk();
+  const paragraph = editableParagraph(sdk, "The goal of the tool");
+
+  sdk.edit(paragraph);
+  paragraph.innerHTML = 'The <span class="x">goal</span> of the tool';
+  paragraph.listeners
+    .find((entry) => entry.type === "keydown")
+    .handler({ key: "Enter", shiftKey: false, preventDefault() {} });
+  sdk.sendChromeMessage({ type: "lavish:textEditResult", ok: true, markup: "The goal of the tool" });
+
+  assert.equal(paragraph.innerHTML, "The goal of the tool", "the stripped span does not linger on screen");
+});
+
 test("committing an in-place edit sends the element's position and both texts", () => {
   const sdk = bootSdk();
   const paragraph = editableParagraph(sdk, "The goal of the tool");
 
   sdk.edit(paragraph);
-  paragraph.textContent = "What the tool is for";
+  paragraph.innerHTML = "What the tool is for";
   const keydown = paragraph.listeners.find((entry) => entry.type === "keydown");
   keydown.handler({ key: "Enter", shiftKey: false, preventDefault() {} });
 
@@ -559,6 +638,7 @@ test("committing an in-place edit sends the element's position and both texts", 
   assert.equal(message.type, "lavish:textEdit");
   assert.equal(message.tag, "p");
   assert.equal(message.index, 0);
+  assert.equal(message.scope, "inner");
   assert.equal(message.before, "The goal of the tool");
   assert.equal(message.after, "What the tool is for");
   assert.equal(paragraph.getAttribute("contenteditable"), null, "editing ends on commit");
@@ -569,11 +649,11 @@ test("escape leaves the text as the file has it", () => {
   const paragraph = editableParagraph(sdk, "The goal of the tool");
 
   sdk.edit(paragraph);
-  paragraph.textContent = "half-typed replacement";
+  paragraph.innerHTML = "half-typed replacement";
   const keydown = paragraph.listeners.find((entry) => entry.type === "keydown");
   keydown.handler({ key: "Escape", preventDefault() {} });
 
-  assert.equal(paragraph.textContent, "The goal of the tool");
+  assert.equal(paragraph.innerHTML, "The goal of the tool");
   assert.ok(!sdk.posted.some((message) => message.type === "lavish:textEdit"), "a cancelled edit is never sent");
 });
 
@@ -582,13 +662,13 @@ test("a refused edit puts the old text back", () => {
   const paragraph = editableParagraph(sdk, "The goal of the tool");
 
   sdk.edit(paragraph);
-  paragraph.textContent = "written while the file changed";
+  paragraph.innerHTML = "written while the file changed";
   paragraph.listeners
     .find((entry) => entry.type === "keydown")
     .handler({ key: "Enter", shiftKey: false, preventDefault() {} });
   sdk.sendChromeMessage({ type: "lavish:textEditResult", ok: false, error: "stale" });
 
-  assert.equal(paragraph.textContent, "The goal of the tool");
+  assert.equal(paragraph.innerHTML, "The goal of the tool");
 });
 
 test("an unchanged edit is not sent", () => {

@@ -1194,9 +1194,10 @@ export async function serve({
   // Mermaid sources for a session's artifact, extracted from the HTML on disk
   // in document order so `index` matches the browser's `.mermaid` element
   // order. The hash feeds whiteboard staleness detection.
-  // An in-place text edit from the review surface: the reviewer fixed the wording of one element
-  // instead of asking the agent to. Refuses rather than guesses when the element cannot be found or
-  // the text it held has changed, so the artifact file is never mangled by a stale review.
+  // An in-place edit from the review surface: the reviewer fixed the wording of one element, or
+  // turned it into a list, instead of asking the agent to. Refuses rather than guesses when the
+  // element cannot be found or the text it held has changed, so the artifact file is never mangled
+  // by a stale review, and the markup it accepts is stripped to a handful of editable tags.
   app.post("/api/:key/text-edit", async (req, res, next) => {
     try {
       const session = await store.findByKey(req.params.key);
@@ -1211,7 +1212,9 @@ export async function serve({
         return;
       }
       await writeFile(session.file, result.html, "utf8");
-      res.json({ status: "saved" });
+      // The markup written back is what survived sanitizing, so the artifact can render exactly
+      // what the file now says rather than what the browser produced.
+      res.json({ status: "saved", markup: result.markup });
     } catch (error) {
       next(error);
     }

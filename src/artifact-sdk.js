@@ -2257,7 +2257,7 @@ export function createArtifactSdk(
 
     shadow = host.attachShadow({ mode: "open" });
     const style = document.createElement("style");
-    style.textContent = `:host{all:initial;position:fixed;z-index:2147483647;left:0;top:0;color-scheme:dark;--ink-900:#0f1115;--ink-800:#11141a;--ink-700:#171a21;--ink-600:#1c212b;--steel-700:#2a2f3a;--steel-600:#303745;--steel-500:#3c4557;--steel-400:#8c96aa;--steel-300:#aeb6c6;--steel-200:#b9c0cf;--steel-100:#d8deea;--cream-50:#fffbf3;--cream-100:#f7f3ea;--cream-200:#e8e1cf;--brass-500:#f4c95d;--brass-400:#ffd877;--brass-ink:#17130a;--bg:var(--ink-900);--bg-panel:var(--ink-800);--bg-elevated:var(--ink-600);--fg:var(--cream-100);--fg-faint:var(--steel-300);--border:var(--steel-600);--accent:#f4c95d;--accent-hover:#ffd877;--font-sans:Geist,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;--font-mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--radius-md:10px;--radius-xl:14px;--shadow-floating:0 20px 70px rgba(0,0,0,.35);font-family:var(--font-sans)}*{box-sizing:border-box}:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.lavish-text-highlight{position:fixed;pointer-events:none;background:rgba(244,201,93,.28);border-radius:2px;box-shadow:0 0 0 1px rgba(244,201,93,.45)}.lavish-annotation-card{position:fixed;width:min(320px,calc(100vw - 24px));padding:12px;border-radius:var(--radius-xl);background:var(--bg-panel);color:var(--fg);border:1px solid var(--accent);box-shadow:var(--shadow-floating);font:14px/1.4 var(--font-sans)}.lavish-heading{font-weight:700;margin-bottom:6px}.lavish-annotation-card textarea{width:100%;min-height:86px;resize:vertical;border-radius:var(--radius-md);border:1px solid var(--border);background:var(--bg);color:var(--fg);padding:9px;font:inherit;font-family:var(--font-sans)}.lavish-annotation-card textarea::placeholder{color:var(--fg-faint)}.lavish-annotation-card .lavish-hint{margin-top:6px;font-size:11px;color:var(--fg-faint)}.lavish-annotation-card .lavish-hint-alert{color:#ff9d7a;font-weight:700}.lavish-annotation-card .lavish-row{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}.lavish-annotation-card button{border:0;border-radius:var(--radius-md);padding:8px 10px;font-family:var(--font-sans);font-size:13px;font-weight:700;cursor:pointer}.lavish-annotation-card button:active{opacity:.85}.lavish-annotation-card .lavish-send{background:var(--accent);color:var(--brass-ink)}.lavish-annotation-card .lavish-send:hover{background:var(--accent-hover)}.lavish-annotation-card .lavish-cancel{background:var(--steel-700);color:var(--fg)}.lavish-annotation-card.is-dropping{outline:2px dashed var(--accent);outline-offset:3px}.lavish-attachments{display:flex;flex-direction:column;gap:6px;margin-top:8px;max-height:176px;overflow-y:auto}.lavish-attachment-chip{display:flex;align-items:center;gap:8px;padding:6px;border-radius:var(--radius-md);background:var(--bg);border:1px solid var(--border)}.lavish-attachment-chip.is-error{border-color:#e0623d}.lavish-attachment-thumb{width:32px;height:32px;border-radius:6px;object-fit:cover;background:var(--ink-700);flex:0 0 auto}.lavish-attachment-thumb-empty{display:inline-block}.lavish-attachment-body{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1 1 auto}.lavish-attachment-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lavish-attachment-status{font-size:11px;color:var(--fg-faint)}.lavish-attachment-status-error{color:#ff9d7a}.lavish-attachment-retry{flex:0 0 auto;padding:4px 8px;font-size:11px;font-weight:700;border-radius:8px;background:var(--steel-700);color:var(--fg);cursor:pointer;border:0}.lavish-attachment-remove{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:22px;height:22px;padding:0!important;border-radius:50%;background:transparent;color:rgba(255,255,255,.85);cursor:pointer;border:0}.lavish-attachment-remove:hover{background:rgba(255,255,255,.14);color:#fff}.lavish-attach-row{margin-top:8px}.lavish-attach{display:inline-flex;align-items:center;gap:6px;padding:6px 9px!important;background:var(--steel-700)!important;color:var(--fg)!important;font-size:12px!important}.lavish-attach:hover{background:var(--steel-600)!important}.lavish-reveal-marker{position:fixed;pointer-events:none;border:2px solid var(--accent);border-radius:4px;box-shadow:0 0 0 4px rgba(244,201,93,.22);animation:lavish-reveal-pulse 2.4s var(--ease,ease-out) forwards}@keyframes lavish-reveal-pulse{0%{opacity:0}12%{opacity:1}70%{opacity:1}100%{opacity:0}}`;
+    style.textContent = `:host{all:initial;position:fixed;z-index:2147483647;left:0;top:0;color-scheme:dark;--ink-900:#0f1115;--ink-800:#11141a;--ink-700:#171a21;--ink-600:#1c212b;--steel-700:#2a2f3a;--steel-600:#303745;--steel-500:#3c4557;--steel-400:#8c96aa;--steel-300:#aeb6c6;--steel-200:#b9c0cf;--steel-100:#d8deea;--cream-50:#fffbf3;--cream-100:#f7f3ea;--cream-200:#e8e1cf;--brass-500:#f4c95d;--brass-400:#ffd877;--brass-ink:#17130a;--bg:var(--ink-900);--bg-panel:var(--ink-800);--bg-elevated:var(--ink-600);--fg:var(--cream-100);--fg-faint:var(--steel-300);--border:var(--steel-600);--accent:#f4c95d;--accent-hover:#ffd877;--font-sans:Geist,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;--font-mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--radius-md:10px;--radius-xl:14px;--shadow-floating:0 20px 70px rgba(0,0,0,.35);font-family:var(--font-sans)}*{box-sizing:border-box}:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.lavish-text-highlight{position:fixed;pointer-events:none;background:rgba(244,201,93,.28);border-radius:2px;box-shadow:0 0 0 1px rgba(244,201,93,.45)}.lavish-annotation-card{position:fixed;width:min(320px,calc(100vw - 24px));padding:12px;border-radius:var(--radius-xl);background:var(--bg-panel);color:var(--fg);border:1px solid var(--accent);box-shadow:var(--shadow-floating);font:14px/1.4 var(--font-sans)}.lavish-heading{font-weight:700;margin-bottom:6px}.lavish-annotation-card textarea{width:100%;min-height:86px;resize:vertical;border-radius:var(--radius-md);border:1px solid var(--border);background:var(--bg);color:var(--fg);padding:9px;font:inherit;font-family:var(--font-sans)}.lavish-annotation-card textarea::placeholder{color:var(--fg-faint)}.lavish-annotation-card .lavish-hint{margin-top:6px;font-size:11px;color:var(--fg-faint)}.lavish-annotation-card .lavish-hint-alert{color:#ff9d7a;font-weight:700}.lavish-annotation-card .lavish-row{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}.lavish-annotation-card button{border:0;border-radius:var(--radius-md);padding:8px 10px;font-family:var(--font-sans);font-size:13px;font-weight:700;cursor:pointer}.lavish-annotation-card button:active{opacity:.85}.lavish-annotation-card .lavish-send{background:var(--accent);color:var(--brass-ink)}.lavish-annotation-card .lavish-send:hover{background:var(--accent-hover)}.lavish-annotation-card .lavish-cancel{background:var(--steel-700);color:var(--fg)}.lavish-annotation-card.is-dropping{outline:2px dashed var(--accent);outline-offset:3px}.lavish-attachments{display:flex;flex-direction:column;gap:6px;margin-top:8px;max-height:176px;overflow-y:auto}.lavish-attachment-chip{display:flex;align-items:center;gap:8px;padding:6px;border-radius:var(--radius-md);background:var(--bg);border:1px solid var(--border)}.lavish-attachment-chip.is-error{border-color:#e0623d}.lavish-attachment-thumb{width:32px;height:32px;border-radius:6px;object-fit:cover;background:var(--ink-700);flex:0 0 auto}.lavish-attachment-thumb-empty{display:inline-block}.lavish-attachment-body{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1 1 auto}.lavish-attachment-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lavish-attachment-status{font-size:11px;color:var(--fg-faint)}.lavish-attachment-status-error{color:#ff9d7a}.lavish-attachment-retry{flex:0 0 auto;padding:4px 8px;font-size:11px;font-weight:700;border-radius:8px;background:var(--steel-700);color:var(--fg);cursor:pointer;border:0}.lavish-attachment-remove{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:22px;height:22px;padding:0!important;border-radius:50%;background:transparent;color:rgba(255,255,255,.85);cursor:pointer;border:0}.lavish-attachment-remove:hover{background:rgba(255,255,255,.14);color:#fff}.lavish-attach-row{margin-top:8px}.lavish-attach{display:inline-flex;align-items:center;gap:6px;padding:6px 9px!important;background:var(--steel-700)!important;color:var(--fg)!important;font-size:12px!important}.lavish-attach:hover{background:var(--steel-600)!important}.lavish-edit-toolbar{position:fixed;display:flex;align-items:center;gap:4px;padding:5px;border-radius:var(--radius-md);background:var(--bg-panel);border:1px solid #7dd3fc;box-shadow:var(--shadow-floating);font:13px/1.2 var(--font-sans)}.lavish-edit-toolbar button{min-width:30px;border:0;border-radius:7px;padding:5px 8px;font:inherit;font-weight:700;cursor:pointer;background:var(--steel-700);color:var(--fg)}.lavish-edit-toolbar button:hover{background:var(--steel-600)}.lavish-edit-toolbar button[aria-pressed="true"]{background:#7dd3fc;color:#0b2b39}.lavish-edit-toolbar .lavish-edit-hint{margin-left:4px;font-size:11px;color:var(--fg-faint);white-space:nowrap}.lavish-edit-toolbar .lavish-edit-url{width:190px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--fg);padding:5px 7px;font:inherit}.lavish-reveal-marker{position:fixed;pointer-events:none;border:2px solid var(--accent);border-radius:4px;box-shadow:0 0 0 4px rgba(244,201,93,.22);animation:lavish-reveal-pulse 2.4s var(--ease,ease-out) forwards}@keyframes lavish-reveal-pulse{0%{opacity:0}12%{opacity:1}70%{opacity:1}100%{opacity:0}}`;
     shadow.appendChild(style);
     return shadow;
   }
@@ -2322,40 +2322,225 @@ export function createArtifactSdk(
     startInlineEdit(el);
   }
 
-  function startInlineEdit(el) {
-    closeCard();
-    clearHighlight(el);
-    inlineEdit = { el, before: el.textContent };
+  // Editing is rich but bounded: the reviewer gets the two list kinds, emphasis and a link, and the
+  // server strips anything else out of what is written to the file.
+  const EDIT_TOOLS = [
+    { id: "ul", label: "\u2022 Bullets", title: "Turn this block into a bulleted list" },
+    { id: "ol", label: "1. Numbered", title: "Turn this block into a numbered list" },
+    { id: "bold", label: "B", title: "Bold the selection" },
+    { id: "italic", label: "I", title: "Italicise the selection" },
+    { id: "link", label: "Link", title: "Link the selection" },
+  ];
+
+  function closeEditToolbar() {
+    if (!shadow) return;
+    for (const el of [...shadow.querySelectorAll(".lavish-edit-toolbar")]) el.remove();
+  }
+
+  function isListTag(tag) {
+    return tag === "ul" || tag === "ol";
+  }
+
+  function currentEditTag() {
+    return inlineEdit ? inlineEdit.el.tagName.toLowerCase() : "";
+  }
+
+  // The toolbar sits above the block being edited, or below it when the block starts at the top of
+  // the viewport. Mousedown is swallowed so pressing a button never blurs the block, which would
+  // commit the edit before the button ran.
+  function showEditToolbar() {
+    const root = ensureShadow();
+    closeEditToolbar();
+    const bar = document.createElement("div");
+    bar.className = "lavish-edit-toolbar";
+    bar.setAttribute("data-lavish-ui", "edit-toolbar");
+    bar.addEventListener("mousedown", (event) => event.preventDefault(), true);
+
+    for (const tool of EDIT_TOOLS) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = tool.label;
+      button.title = tool.title;
+      button.setAttribute("data-tool", tool.id);
+      button.onclick = () => runEditTool(tool.id, bar);
+      bar.appendChild(button);
+    }
+
+    const hint = document.createElement("span");
+    hint.className = "lavish-edit-hint";
+    hint.textContent = "\u2318\u21a9 save \u00b7 esc cancel";
+    bar.appendChild(hint);
+
+    root.appendChild(bar);
+    positionEditToolbar(bar);
+    markPressedTools(bar);
+    return bar;
+  }
+
+  function positionEditToolbar(bar) {
+    if (!inlineEdit) return;
+    const rect = inlineEdit.el.getBoundingClientRect();
+    const height = bar.getBoundingClientRect().height || 34;
+    const above = rect.top - height - 8;
+    bar.style.left = Math.max(8, rect.left) + "px";
+    bar.style.top = (above > 8 ? above : Math.min(rect.bottom + 8, window.innerHeight - height - 8)) + "px";
+  }
+
+  function markPressedTools(bar) {
+    const tag = currentEditTag();
+    for (const button of [...bar.querySelectorAll("button")]) {
+      const pressed = button.getAttribute("data-tool") === tag;
+      button.setAttribute("aria-pressed", String(pressed));
+    }
+  }
+
+  function runEditTool(id, bar) {
+    if (!inlineEdit) return;
+    if (id === "ul" || id === "ol") convertEditedBlock(currentEditTag() === id ? unlistedTag() : id, bar);
+    else if (id === "link") promptForLink(bar);
+    else execEditCommand(id);
+    focusEdited();
+  }
+
+  // execCommand is deprecated and still the only cross-browser way to wrap a selection from a
+  // contenteditable; nothing else here depends on it.
+  function execEditCommand(command, value) {
+    if (typeof document.execCommand === "function") document.execCommand(command, false, value);
+  }
+
+  function promptForLink(bar) {
+    if (bar.querySelector(".lavish-edit-url")) return;
+    const field = document.createElement("input");
+    field.className = "lavish-edit-url";
+    field.type = "url";
+    field.placeholder = "https://\u2026 then \u21a9";
+    field.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        const url = field.value.trim();
+        field.remove();
+        focusEdited();
+        if (url) execEditCommand("createLink", url);
+      }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        field.remove();
+        focusEdited();
+      }
+    });
+    bar.appendChild(field);
+    field.focus();
+  }
+
+  // The lines a block holds, as markup: one per <li> when it is already a list, otherwise one per
+  // line break. They become the items of the list, or are rejoined by <br> on the way back.
+  function editedLines(el) {
+    const tag = el.tagName.toLowerCase();
+    if (isListTag(tag)) {
+      const items = typeof el.querySelectorAll === "function" ? [...el.querySelectorAll("li")] : [];
+      return items.map((item) => item.innerHTML.trim()).filter(Boolean);
+    }
+    return String(el.innerHTML || "")
+      .split(/<br\s*\/?>|\n/i)
+      .map((line) => line.trim())
+      .filter(Boolean);
+  }
+
+  // Turning a paragraph into a list replaces the element, so the page changes shape exactly as the
+  // file will. The identity the patch travels under stays the one captured when editing began.
+  function convertEditedBlock(nextTag, bar) {
+    if (!inlineEdit) return;
+    const el = inlineEdit.el;
+    const lines = editedLines(el);
+    const next = document.createElement(nextTag);
+    next.innerHTML = isListTag(nextTag) ? lines.map((line) => "<li>" + line + "</li>").join("") : lines.join("<br>");
+    // Coming back to the original tag brings back what it wore, so a styled block does not lose its
+    // class on a round trip through a list.
+    if (nextTag === inlineEdit.originalTag) {
+      for (const [name, value] of inlineEdit.attributes) next.setAttribute(name, value);
+    }
+    if (typeof el.replaceWith !== "function") return;
+    detachEdited(el);
+    el.replaceWith(next);
+    inlineEdit.el = next;
+    attachEdited(next);
+    markPressedTools(bar);
+    positionEditToolbar(bar);
+  }
+
+  // Switching a list off returns it to the block it was made from, or to a paragraph when the file
+  // was already holding the list before this session opened.
+  function unlistedTag() {
+    return isListTag(inlineEdit.originalTag) ? "p" : inlineEdit.originalTag;
+  }
+
+  function focusEdited() {
+    if (inlineEdit && typeof inlineEdit.el.focus === "function") inlineEdit.el.focus();
+  }
+
+  function attachEdited(el) {
     el.setAttribute("data-lavish-editing", "true");
-    el.setAttribute("contenteditable", "plaintext-only");
+    el.setAttribute("contenteditable", "true");
     el.style.outline = "2px solid #7dd3fc";
     el.style.outlineOffset = "2px";
     el.addEventListener("keydown", onInlineEditKeydown, true);
     el.addEventListener("blur", commitInlineEdit, true);
     el.focus();
-    const selection = typeof document.getSelection === "function" ? document.getSelection() : null;
-    if (selection && typeof document.createRange === "function") {
-      const range = document.createRange();
-      range.selectNodeContents(el);
-      selection.removeAllRanges();
-      selection.addRange(range);
-    }
   }
 
-  function stopInlineEdit() {
-    if (!inlineEdit) return null;
-    const { el, before } = inlineEdit;
-    inlineEdit = null;
+  function detachEdited(el) {
     el.removeEventListener("keydown", onInlineEditKeydown, true);
     el.removeEventListener("blur", commitInlineEdit, true);
     el.removeAttribute("contenteditable");
     el.removeAttribute("data-lavish-editing");
     clearHighlight(el);
-    return { el, before };
   }
 
+  function startInlineEdit(el) {
+    closeCard();
+    clearHighlight(el);
+    const tag = el.tagName.toLowerCase();
+    inlineEdit = {
+      el,
+      before: el.textContent,
+      html: el.innerHTML,
+      tag,
+      index: tagIndexOf(el),
+      originalTag: tag,
+      attributes: attributesOf(el),
+    };
+    attachEdited(el);
+    selectContents(el);
+    showEditToolbar();
+  }
+
+  function attributesOf(el) {
+    if (typeof el.getAttributeNames !== "function") return [];
+    return el.getAttributeNames().map((name) => [name, el.getAttribute(name)]);
+  }
+
+  function selectContents(el) {
+    const selection = typeof document.getSelection === "function" ? document.getSelection() : null;
+    if (!selection || typeof document.createRange !== "function") return;
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+
+  function stopInlineEdit() {
+    if (!inlineEdit) return null;
+    const state = inlineEdit;
+    inlineEdit = null;
+    closeEditToolbar();
+    detachEdited(state.el);
+    return state;
+  }
+
+  // Enter commits a paragraph, which is what a typo fix wants; inside a list it has to make the
+  // next bullet, so there the commit is Cmd/Ctrl+Enter, which works in both.
   function onInlineEditKeydown(event) {
-    if (event.key === "Enter" && !event.shiftKey) {
+    if (event.key === "Enter" && !event.shiftKey && (event.metaKey || event.ctrlKey || !isListTag(currentEditTag()))) {
       event.preventDefault();
       commitInlineEdit();
       return;
@@ -2363,27 +2548,62 @@ export function createArtifactSdk(
     if (event.key === "Escape") {
       event.preventDefault();
       const stopped = stopInlineEdit();
-      if (stopped) stopped.el.textContent = stopped.before;
+      if (stopped) restoreEdited(stopped);
     }
   }
 
-  // The chrome asks the server to patch the artifact file. The new text stays on screen meanwhile;
+  // Put back what the file still says: the original tag as well, when the block had been converted.
+  function restoreEdited(state) {
+    const { el, html, originalTag } = state;
+    if (el.tagName.toLowerCase() === originalTag) {
+      el.innerHTML = html;
+      return el;
+    }
+    const original = document.createElement(originalTag);
+    original.innerHTML = html;
+    if (typeof el.replaceWith === "function") el.replaceWith(original);
+    return original;
+  }
+
+  // The chrome asks the server to patch the artifact file. The new markup stays on screen meanwhile;
   // a refusal arrives as lavish:textEditResult and puts back what the file still says.
   function commitInlineEdit() {
     const stopped = stopInlineEdit();
     if (!stopped) return;
-    const { el, before } = stopped;
-    const after = el.textContent;
-    if (after === before) return;
-    pendingEdit = { el, before };
+    const { el, before, html, tag, index, originalTag } = stopped;
+    const outer = el.tagName.toLowerCase() !== originalTag;
+    const after = outer ? outerMarkup(el) : el.innerHTML;
+    if (!outer && after === html) return;
+    pendingEdit = stopped;
     postArtifactMessage("lavish:textEdit", {
-      tag: el.tagName.toLowerCase(),
-      index: tagIndexOf(el),
+      tag,
+      index,
       before,
       after,
+      scope: outer ? "outer" : "inner",
       selector: selector(el),
     });
     flashOutline(el, "#7dd3fc");
+  }
+
+  // Sanitizing can drop what the browser produced, so the element is re-rendered from what the file
+  // now says rather than from what was typed.
+  function renderSavedMarkup(state, markup) {
+    const outer = state.el.tagName.toLowerCase() !== state.originalTag;
+    if (!outer) {
+      if (state.el.innerHTML !== markup) state.el.innerHTML = markup;
+      return;
+    }
+    const holder = document.createElement("div");
+    holder.innerHTML = markup;
+    const saved = holder.firstElementChild;
+    if (saved && typeof state.el.replaceWith === "function") state.el.replaceWith(saved);
+  }
+
+  function outerMarkup(el) {
+    if (typeof el.outerHTML === "string") return el.outerHTML;
+    const tag = el.tagName.toLowerCase();
+    return "<" + tag + ">" + el.innerHTML + "</" + tag + ">";
   }
 
   function showAnnotationCard(target, options = {}) {
@@ -2605,9 +2825,9 @@ export function createArtifactSdk(
     if (msg.type === "lavish:setAnnotationMode") setAnnotationMode(msg.enabled);
     if (msg.type === "lavish:setEditMode") setEditMode(msg.enabled);
     if (msg.type === "lavish:textEditResult") {
-      if (!msg.ok && pendingEdit) {
-        pendingEdit.el.textContent = pendingEdit.before;
-        flashOutline(pendingEdit.el, "#ff9d7a");
+      if (pendingEdit) {
+        if (!msg.ok) flashOutline(restoreEdited(pendingEdit), "#ff9d7a");
+        else if (msg.markup) renderSavedMarkup(pendingEdit, msg.markup);
       }
       pendingEdit = null;
     }
