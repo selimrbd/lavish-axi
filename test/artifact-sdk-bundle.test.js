@@ -39,6 +39,9 @@ function createElement(tag) {
     getAttribute(name) {
       return attributes.has(name) ? attributes.get(name) : null;
     },
+    getAttributeNames() {
+      return [...attributes.keys()];
+    },
     removeAttribute(name) {
       attributes.delete(name);
     },
@@ -624,6 +627,28 @@ test("clicking inside a list edits the whole list, not the item", () => {
 
   assert.equal(list.getAttribute("contenteditable"), "true");
   assert.equal(item.getAttribute("contenteditable"), null, "the item is not edited on its own");
+});
+
+test("a paragraph carrying a link is editable, and a styled one is not", () => {
+  const sdk = bootSdk();
+  const linked = appendTo(sdk.body, createElement("p"));
+  const link = markupChild("a", "data stack anonymization RFC");
+  link.setAttribute("href", "../20260724-rfc-data-stack-anonymization/1-RFC.md");
+  linked.textContent =
+    "Every question has started the same way: the data stack anonymization RFC named sixteen fields.";
+  linked.childNodes = [{ nodeType: 3, textContent: "Every question " }, link, { nodeType: 3, textContent: " named" }];
+
+  sdk.edit(linked);
+  assert.equal(linked.getAttribute("contenteditable"), "true");
+
+  const styled = appendTo(sdk.body, createElement("p"));
+  const badge = markupChild("strong", "promise");
+  badge.setAttribute("class", "badge");
+  styled.textContent = "a goal and a promise";
+  styled.childNodes = [{ nodeType: 3, textContent: "a goal and a " }, badge];
+
+  sdk.edit(styled);
+  assert.equal(styled.getAttribute("contenteditable"), null, "an author's class is not the reviewer's to rewrite");
 });
 
 test("an element holding markup is refused rather than edited", () => {
