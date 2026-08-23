@@ -2348,14 +2348,14 @@ export function createArtifactSdk(
   }
 
   // Refusing is worth seeing: an element holding markup flashes amber rather than doing nothing.
-  function beginEdit(target) {
+  function beginEdit(target, point) {
     const el = editTargetEl(target);
     if (!el) {
       const anchor = annotationTargetEl(target);
       if (anchor) flashOutline(anchor, "#ff9d7a");
       return;
     }
-    startInlineEdit(el);
+    startInlineEdit(el, point);
   }
 
   // Editing is rich but bounded: the reviewer gets the two list kinds, emphasis and a link, and the
@@ -2533,7 +2533,7 @@ export function createArtifactSdk(
     clearHighlight(el);
   }
 
-  function startInlineEdit(el) {
+  function startInlineEdit(el, point) {
     closeCard();
     clearHighlight(el);
     const tag = el.tagName.toLowerCase();
@@ -2547,7 +2547,7 @@ export function createArtifactSdk(
       attributes: attributesOf(el),
     };
     attachEdited(el);
-    selectContents(el);
+    placeCaret(el, point);
     showEditToolbar();
   }
 
@@ -2556,13 +2556,40 @@ export function createArtifactSdk(
     return el.getAttributeNames().map((name) => [name, el.getAttribute(name)]);
   }
 
-  function selectContents(el) {
+  // The caret lands where the click did. Selecting the whole block instead would make the first
+  // keystroke wipe a paragraph the reviewer only meant to fix a word in.
+  function placeCaret(el, point) {
     const selection = typeof document.getSelection === "function" ? document.getSelection() : null;
-    if (!selection || typeof document.createRange !== "function") return;
-    const range = document.createRange();
-    range.selectNodeContents(el);
+    if (!selection) return;
+    let range = caretRangeAt(point);
+    if (!range || !el.contains || !el.contains(range.startContainer)) range = endOf(el);
+    if (!range) return;
+    range.collapse(true);
     selection.removeAllRanges();
     selection.addRange(range);
+  }
+
+  function caretRangeAt(point) {
+    if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return null;
+    if (typeof document.caretRangeFromPoint === "function") return document.caretRangeFromPoint(point.x, point.y);
+    // Firefox answers with a position rather than a range.
+    if (typeof document.caretPositionFromPoint === "function" && typeof document.createRange === "function") {
+      const position = document.caretPositionFromPoint(point.x, point.y);
+      if (!position) return null;
+      const range = document.createRange();
+      range.setStart(position.offsetNode, position.offset);
+      return range;
+    }
+    return null;
+  }
+
+  // Where an edit with nothing to aim at starts: the end of the block, never the whole of it.
+  function endOf(el) {
+    if (typeof document.createRange !== "function") return null;
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    return range;
   }
 
   function stopInlineEdit() {
@@ -3034,7 +3061,7 @@ export function createArtifactSdk(
         ignoreNextClick = false;
         return;
       }
-      if (editMode) beginEdit(event.target);
+      if (editMode) beginEdit(event.target, { x: event.clientX, y: event.clientY });
       else showAnnotationCard(event.target);
     },
     true,

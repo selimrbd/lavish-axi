@@ -125,6 +125,18 @@ function cell(tag, text) {
 function bootSdk() {
   const posted = [];
   const execCommands = [];
+  const selection = {
+    ranges: [],
+    rangeCount: 0,
+    removeAllRanges() {
+      this.ranges.length = 0;
+    },
+    addRange(range) {
+      this.ranges.push(range);
+    },
+    getRangeAt: () => null,
+    toString: () => "",
+  };
   const documentListeners = [];
   // Deferred work the SDK schedules, run only when a test asks for it: the draft-anchor settle
   // re-query is a real timer, and asserting on it means running it rather than assuming it.
@@ -181,8 +193,9 @@ function bootSdk() {
         execCommands.push([command, value]);
         return command !== "insertLineBreak";
       },
-      getSelection: () => null,
-      createRange: () => ({ selectNodeContents() {} }),
+      getSelection: () => selection,
+      caretRangeFromPoint: (x, y) => ({ kind: "from-point", x, y, startContainer: body, collapse() {} }),
+      createRange: () => ({ kind: "node-contents", selectNodeContents() {}, collapse() {} }),
       getElementsByTagName: (tag) => {
         const wanted = String(tag).toUpperCase();
         const found = [];
@@ -218,12 +231,13 @@ function bootSdk() {
   return {
     posted,
     execCommands,
+    selection,
     body,
     api: sandbox.window.lavish,
-    rawClick(target) {
+    rawClick(target, point = { clientX: 120, clientY: 240 }) {
       const listener = documentListeners.find((entry) => entry.type === "click");
       assert.ok(listener, "the SDK registers a document click listener");
-      listener.handler({ target, preventDefault() {}, stopPropagation() {} });
+      listener.handler({ target, ...point, preventDefault() {}, stopPropagation() {} });
     },
     // The armed mode decides what a click does, and the chrome is what arms it.
     setMode(mode) {
@@ -233,9 +247,9 @@ function bootSdk() {
     click(target) {
       this.rawClick(target);
     },
-    edit(target) {
+    edit(target, point) {
       this.setMode("edit");
-      this.rawClick(target);
+      this.rawClick(target, point);
     },
     pressKey(key, target) {
       const listeners = documentListeners.filter((entry) => entry.type === "keydown");
@@ -649,6 +663,29 @@ test("a paragraph carrying a link is editable, and a styled one is not", () => {
 
   sdk.edit(styled);
   assert.equal(styled.getAttribute("contenteditable"), null, "an author's class is not the reviewer's to rewrite");
+});
+
+test("the caret lands where the click did, not around the whole block", () => {
+  const sdk = bootSdk();
+  const paragraph = editableParagraph(sdk, "The goal of the tool");
+  paragraph.contains = (node) => node === sdk.body;
+
+  sdk.edit(paragraph, { clientX: 310, clientY: 96 });
+
+  const range = sdk.selection.ranges.at(-1);
+  assert.equal(range.kind, "from-point", "the whole block is never selected on entry");
+  assert.deepEqual([range.x, range.y], [310, 96]);
+});
+
+test("a caret with nothing to aim at goes to the end of the block", () => {
+  const sdk = bootSdk();
+  const paragraph = editableParagraph(sdk, "The goal of the tool");
+  // The point landed outside the block, which is what a caretRangeFromPoint on a gap answers.
+  paragraph.contains = () => false;
+
+  sdk.edit(paragraph);
+
+  assert.equal(sdk.selection.ranges.at(-1).kind, "node-contents");
 });
 
 test("an element holding markup is refused rather than edited", () => {
