@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { EventEmitter } from "node:events";
 import { existsSync } from "node:fs";
-import { readFile, realpath } from "node:fs/promises";
+import { readFile, realpath, writeFile } from "node:fs/promises";
 import { isIP } from "node:net";
 import { homedir } from "node:os";
 import path from "node:path";
@@ -37,6 +37,7 @@ import {
 import * as mermaidNode from "./mermaid-node.js";
 import * as tableCellHelpers from "./table-cell.js";
 import { extractMermaidSources, mermaidSourceHash } from "./mermaid-source.js";
+import { applyTextEdit } from "./text-edit.js";
 import {
   isValidDiagramIndex,
   isValidWhiteboardKey,
@@ -1190,6 +1191,29 @@ export async function serve({
   // Mermaid sources for a session's artifact, extracted from the HTML on disk
   // in document order so `index` matches the browser's `.mermaid` element
   // order. The hash feeds whiteboard staleness detection.
+  // An in-place text edit from the review surface: the reviewer fixed the wording of one element
+  // instead of asking the agent to. Refuses rather than guesses when the element cannot be found or
+  // the text it held has changed, so the artifact file is never mangled by a stale review.
+  app.post("/api/:key/text-edit", async (req, res, next) => {
+    try {
+      const session = await store.findByKey(req.params.key);
+      if (!session) {
+        res.status(404).json({ error: "session not found" });
+        return;
+      }
+      const html = await readFile(session.file, "utf8");
+      const result = applyTextEdit(html, req.body || {});
+      if (result.error) {
+        res.status(409).json({ error: result.error });
+        return;
+      }
+      await writeFile(session.file, result.html, "utf8");
+      res.json({ status: "saved" });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   app.get("/api/:key/mermaid-sources", async (req, res, next) => {
     try {
       const session = await store.findByKey(req.params.key);
