@@ -2265,7 +2265,7 @@ export function createArtifactSdk(
 
     shadow = host.attachShadow({ mode: "open" });
     const style = document.createElement("style");
-    style.textContent = `:host{all:initial;position:fixed;z-index:2147483647;left:0;top:0;color-scheme:dark;--ink-900:#0f1115;--ink-800:#11141a;--ink-700:#171a21;--ink-600:#1c212b;--steel-700:#2a2f3a;--steel-600:#303745;--steel-500:#3c4557;--steel-400:#8c96aa;--steel-300:#aeb6c6;--steel-200:#b9c0cf;--steel-100:#d8deea;--cream-50:#fffbf3;--cream-100:#f7f3ea;--cream-200:#e8e1cf;--brass-500:#f4c95d;--brass-400:#ffd877;--brass-ink:#17130a;--bg:var(--ink-900);--bg-panel:var(--ink-800);--bg-elevated:var(--ink-600);--fg:var(--cream-100);--fg-faint:var(--steel-300);--border:var(--steel-600);--accent:#f4c95d;--accent-hover:#ffd877;--font-sans:Geist,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;--font-mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--radius-md:10px;--radius-xl:14px;--shadow-floating:0 20px 70px rgba(0,0,0,.35);font-family:var(--font-sans)}*{box-sizing:border-box}:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.lavish-text-highlight{position:fixed;pointer-events:none;background:rgba(244,201,93,.28);border-radius:2px;box-shadow:0 0 0 1px rgba(244,201,93,.45)}.lavish-annotation-card{position:fixed;width:min(320px,calc(100vw - 24px));padding:12px;border-radius:var(--radius-xl);background:var(--bg-panel);color:var(--fg);border:1px solid var(--accent);box-shadow:var(--shadow-floating);font:14px/1.4 var(--font-sans)}.lavish-heading{font-weight:700;margin-bottom:6px}.lavish-annotation-card textarea{width:100%;min-height:86px;resize:vertical;border-radius:var(--radius-md);border:1px solid var(--border);background:var(--bg);color:var(--fg);padding:9px;font:inherit;font-family:var(--font-sans)}.lavish-annotation-card textarea::placeholder{color:var(--fg-faint)}.lavish-annotation-card .lavish-hint{margin-top:6px;font-size:11px;color:var(--fg-faint)}.lavish-annotation-card .lavish-hint-alert{color:#ff9d7a;font-weight:700}.lavish-annotation-card .lavish-row{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}.lavish-annotation-card button{border:0;border-radius:var(--radius-md);padding:8px 10px;font-family:var(--font-sans);font-size:13px;font-weight:700;cursor:pointer}.lavish-annotation-card button:active{opacity:.85}.lavish-annotation-card .lavish-send{background:var(--accent);color:var(--brass-ink)}.lavish-annotation-card .lavish-send:hover{background:var(--accent-hover)}.lavish-annotation-card .lavish-cancel{background:var(--steel-700);color:var(--fg)}.lavish-annotation-card.is-dropping{outline:2px dashed var(--accent);outline-offset:3px}.lavish-attachments{display:flex;flex-direction:column;gap:6px;margin-top:8px;max-height:176px;overflow-y:auto}.lavish-attachment-chip{display:flex;align-items:center;gap:8px;padding:6px;border-radius:var(--radius-md);background:var(--bg);border:1px solid var(--border)}.lavish-attachment-chip.is-error{border-color:#e0623d}.lavish-attachment-thumb{width:32px;height:32px;border-radius:6px;object-fit:cover;background:var(--ink-700);flex:0 0 auto}.lavish-attachment-thumb-empty{display:inline-block}.lavish-attachment-body{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1 1 auto}.lavish-attachment-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lavish-attachment-status{font-size:11px;color:var(--fg-faint)}.lavish-attachment-status-error{color:#ff9d7a}.lavish-attachment-retry{flex:0 0 auto;padding:4px 8px;font-size:11px;font-weight:700;border-radius:8px;background:var(--steel-700);color:var(--fg);cursor:pointer;border:0}.lavish-attachment-remove{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:22px;height:22px;padding:0!important;border-radius:50%;background:transparent;color:rgba(255,255,255,.85);cursor:pointer;border:0}.lavish-attachment-remove:hover{background:rgba(255,255,255,.14);color:#fff}.lavish-attach-row{margin-top:8px}.lavish-attach{display:inline-flex;align-items:center;gap:6px;padding:6px 9px!important;background:var(--steel-700)!important;color:var(--fg)!important;font-size:12px!important}.lavish-attach:hover{background:var(--steel-600)!important}.lavish-edit-toolbar{position:fixed;display:flex;align-items:center;gap:4px;padding:5px;border-radius:var(--radius-md);background:var(--bg-panel);border:1px solid #7dd3fc;box-shadow:var(--shadow-floating);font:13px/1.2 var(--font-sans)}.lavish-edit-toolbar button{min-width:30px;border:0;border-radius:7px;padding:5px 8px;font:inherit;font-weight:700;cursor:pointer;background:var(--steel-700);color:var(--fg)}.lavish-edit-toolbar button:hover{background:var(--steel-600)}.lavish-edit-toolbar button[aria-pressed="true"]{background:#7dd3fc;color:#0b2b39}.lavish-edit-toolbar button.is-danger{margin-left:auto;background:transparent;color:#ff9d7a}.lavish-edit-toolbar button.is-danger:hover{background:rgba(255,157,122,.16)}.lavish-edit-toolbar button.is-danger[data-armed="true"]{background:#e0623d;color:#fff}.lavish-edit-toolbar .lavish-edit-hint{margin-left:4px;font-size:11px;color:var(--fg-faint);white-space:nowrap}.lavish-edit-toolbar .lavish-edit-url{width:190px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--fg);padding:5px 7px;font:inherit}.lavish-reveal-marker{position:fixed;pointer-events:none;border:2px solid var(--accent);border-radius:4px;box-shadow:0 0 0 4px rgba(244,201,93,.22);animation:lavish-reveal-pulse 2.4s var(--ease,ease-out) forwards}@keyframes lavish-reveal-pulse{0%{opacity:0}12%{opacity:1}70%{opacity:1}100%{opacity:0}}`;
+    style.textContent = `:host{all:initial;position:fixed;z-index:2147483647;left:0;top:0;color-scheme:dark;--ink-900:#0f1115;--ink-800:#11141a;--ink-700:#171a21;--ink-600:#1c212b;--steel-700:#2a2f3a;--steel-600:#303745;--steel-500:#3c4557;--steel-400:#8c96aa;--steel-300:#aeb6c6;--steel-200:#b9c0cf;--steel-100:#d8deea;--cream-50:#fffbf3;--cream-100:#f7f3ea;--cream-200:#e8e1cf;--brass-500:#f4c95d;--brass-400:#ffd877;--brass-ink:#17130a;--bg:var(--ink-900);--bg-panel:var(--ink-800);--bg-elevated:var(--ink-600);--fg:var(--cream-100);--fg-faint:var(--steel-300);--border:var(--steel-600);--accent:#f4c95d;--accent-hover:#ffd877;--font-sans:Geist,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;--font-mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--radius-md:10px;--radius-xl:14px;--shadow-floating:0 20px 70px rgba(0,0,0,.35);font-family:var(--font-sans)}*{box-sizing:border-box}:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.lavish-text-highlight{position:fixed;pointer-events:none;background:rgba(244,201,93,.28);border-radius:2px;box-shadow:0 0 0 1px rgba(244,201,93,.45)}.lavish-annotation-card{position:fixed;width:min(320px,calc(100vw - 24px));padding:12px;border-radius:var(--radius-xl);background:var(--bg-panel);color:var(--fg);border:1px solid var(--accent);box-shadow:var(--shadow-floating);font:14px/1.4 var(--font-sans)}.lavish-heading{font-weight:700;margin-bottom:6px}.lavish-annotation-card textarea{width:100%;min-height:86px;resize:vertical;border-radius:var(--radius-md);border:1px solid var(--border);background:var(--bg);color:var(--fg);padding:9px;font:inherit;font-family:var(--font-sans)}.lavish-annotation-card textarea::placeholder{color:var(--fg-faint)}.lavish-annotation-card .lavish-hint{margin-top:6px;font-size:11px;color:var(--fg-faint)}.lavish-annotation-card .lavish-hint-alert{color:#ff9d7a;font-weight:700}.lavish-annotation-card .lavish-row{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}.lavish-annotation-card button{border:0;border-radius:var(--radius-md);padding:8px 10px;font-family:var(--font-sans);font-size:13px;font-weight:700;cursor:pointer}.lavish-annotation-card button:active{opacity:.85}.lavish-annotation-card .lavish-send{background:var(--accent);color:var(--brass-ink)}.lavish-annotation-card .lavish-send:hover{background:var(--accent-hover)}.lavish-annotation-card .lavish-cancel{background:var(--steel-700);color:var(--fg)}.lavish-annotation-card.is-dropping{outline:2px dashed var(--accent);outline-offset:3px}.lavish-attachments{display:flex;flex-direction:column;gap:6px;margin-top:8px;max-height:176px;overflow-y:auto}.lavish-attachment-chip{display:flex;align-items:center;gap:8px;padding:6px;border-radius:var(--radius-md);background:var(--bg);border:1px solid var(--border)}.lavish-attachment-chip.is-error{border-color:#e0623d}.lavish-attachment-thumb{width:32px;height:32px;border-radius:6px;object-fit:cover;background:var(--ink-700);flex:0 0 auto}.lavish-attachment-thumb-empty{display:inline-block}.lavish-attachment-body{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1 1 auto}.lavish-attachment-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lavish-attachment-status{font-size:11px;color:var(--fg-faint)}.lavish-attachment-status-error{color:#ff9d7a}.lavish-attachment-retry{flex:0 0 auto;padding:4px 8px;font-size:11px;font-weight:700;border-radius:8px;background:var(--steel-700);color:var(--fg);cursor:pointer;border:0}.lavish-attachment-remove{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:22px;height:22px;padding:0!important;border-radius:50%;background:transparent;color:rgba(255,255,255,.85);cursor:pointer;border:0}.lavish-attachment-remove:hover{background:rgba(255,255,255,.14);color:#fff}.lavish-attach-row{margin-top:8px}.lavish-attach{display:inline-flex;align-items:center;gap:6px;padding:6px 9px!important;background:var(--steel-700)!important;color:var(--fg)!important;font-size:12px!important}.lavish-attach:hover{background:var(--steel-600)!important}.lavish-edit-toolbar{position:fixed;display:flex;align-items:center;gap:4px;padding:5px;border-radius:var(--radius-md);background:var(--bg-panel);border:1px solid #7dd3fc;box-shadow:var(--shadow-floating);font:13px/1.2 var(--font-sans)}.lavish-edit-toolbar button{width:28px;height:28px;padding:0;display:grid;place-items:center;border:0;border-radius:7px;font:inherit;line-height:1;cursor:pointer;background:var(--steel-700);color:var(--fg)}.lavish-edit-toolbar button.is-bold{font-weight:800}.lavish-edit-toolbar button.is-italic{font-style:italic;font-family:var(--font-serif,Georgia,serif);font-size:15px}.lavish-edit-toolbar button:hover{background:var(--steel-600)}.lavish-edit-toolbar button[aria-pressed="true"]{background:#7dd3fc;color:#0b2b39}.lavish-edit-remove{position:fixed;display:flex;align-items:center;justify-content:center;width:22px;height:22px;padding:0;border:1px solid var(--border);border-radius:50%;background:var(--bg-panel);color:var(--fg-faint);font:16px/1 var(--font-sans);cursor:pointer}.lavish-edit-remove:hover{border-color:#e0623d;color:#ff9d7a}.lavish-edit-remove[data-armed="true"]{background:#e0623d;border-color:#e0623d;color:#fff}.lavish-edit-toolbar .lavish-edit-url{width:190px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--fg);padding:5px 7px;font:inherit}.lavish-reveal-marker{position:fixed;pointer-events:none;border:2px solid var(--accent);border-radius:4px;box-shadow:0 0 0 4px rgba(244,201,93,.22);animation:lavish-reveal-pulse 2.4s var(--ease,ease-out) forwards}@keyframes lavish-reveal-pulse{0%{opacity:0}12%{opacity:1}70%{opacity:1}100%{opacity:0}}`;
     shadow.appendChild(style);
     return shadow;
   }
@@ -2424,18 +2424,40 @@ export function createArtifactSdk(
 
   // Editing is rich but bounded: the reviewer gets the two list kinds, emphasis and a link, and the
   // server strips anything else out of what is written to the file.
+  // One square per tool, so the row reads as a set rather than as a sentence. Lists and links carry
+  // a drawn mark; bold and italic are the letters everyone already knows, set in their own weight.
+  const LIST_ROWS =
+    '<path d="M6.5 3.6h7M6.5 8h7M6.5 12.4h7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>';
   const EDIT_TOOLS = [
-    { id: "ul", label: "\u2022 Bullets", title: "Turn this block into a bulleted list" },
-    { id: "ol", label: "1. Numbered", title: "Turn this block into a numbered list" },
-    { id: "bold", label: "B", title: "Bold the selection" },
-    { id: "italic", label: "I", title: "Italicise the selection" },
-    { id: "link", label: "Link", title: "Link the selection" },
-    { id: "remove", label: "Remove", title: "Take this block out of the file", danger: true },
+    {
+      id: "ul",
+      title: "Bulleted list",
+      icon:
+        '<svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="2.6" cy="3.6" r="1.3" fill="currentColor"/><circle cx="2.6" cy="8" r="1.3" fill="currentColor"/><circle cx="2.6" cy="12.4" r="1.3" fill="currentColor"/>' +
+        LIST_ROWS +
+        "</svg>",
+    },
+    {
+      id: "ol",
+      title: "Numbered list",
+      icon:
+        '<svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><text x="0" y="5.4" font-size="5.5" font-family="inherit" fill="currentColor">1</text><text x="0" y="9.8" font-size="5.5" font-family="inherit" fill="currentColor">2</text><text x="0" y="14.2" font-size="5.5" font-family="inherit" fill="currentColor">3</text>' +
+        LIST_ROWS +
+        "</svg>",
+    },
+    { id: "bold", title: "Bold", text: "B", className: "is-bold" },
+    { id: "italic", title: "Italic", text: "I", className: "is-italic" },
+    {
+      id: "link",
+      title: "Link (\u2318K)",
+      icon: '<svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M6.8 9.2a2.9 2.9 0 0 0 4.1 0l1.9-1.9a2.9 2.9 0 1 0-4.1-4.1l-.9.9"/><path d="M9.2 6.8a2.9 2.9 0 0 0-4.1 0L3.2 8.7a2.9 2.9 0 1 0 4.1 4.1l.9-.9"/></svg>',
+    },
   ];
 
   function closeEditToolbar() {
     if (!shadow) return;
     for (const el of [...shadow.querySelectorAll(".lavish-edit-toolbar")]) el.remove();
+    for (const el of [...shadow.querySelectorAll(".lavish-edit-remove")]) el.remove();
   }
 
   function isListTag(tag) {
@@ -2460,65 +2482,110 @@ export function createArtifactSdk(
     for (const tool of EDIT_TOOLS) {
       const button = document.createElement("button");
       button.type = "button";
-      button.textContent = tool.label;
       button.title = tool.title;
+      button.setAttribute("aria-label", tool.title);
       button.setAttribute("data-tool", tool.id);
-      if (tool.danger) button.className = "is-danger";
-      button.onclick = () => runEditTool(tool.id, bar, button);
+      if (tool.className) button.className = tool.className;
+      if (tool.icon) button.innerHTML = tool.icon;
+      else button.textContent = tool.text;
+      button.onclick = () => runEditTool(tool.id, bar);
       bar.appendChild(button);
     }
 
-    const hint = document.createElement("span");
-    hint.className = "lavish-edit-hint";
-    hint.textContent = "\u21a9 new line \u00b7 \u2318\u21a9 save \u00b7 esc cancel";
-    bar.appendChild(hint);
-
     root.appendChild(bar);
-    positionEditToolbar(bar);
+    showRemoveCross(root);
+    positionEditChrome(bar);
     markPressedTools(bar);
     return bar;
   }
 
-  function positionEditToolbar(bar) {
+  // Deleting a block belongs on the block, not in a row of formatting tools: a cross on its top
+  // right corner, where every closable thing keeps one. It asks once, because there is no undo
+  // anywhere behind it.
+  function showRemoveCross(root) {
+    const cross = document.createElement("button");
+    cross.type = "button";
+    cross.className = "lavish-edit-remove";
+    cross.setAttribute("data-lavish-ui", "edit-remove");
+    cross.setAttribute("aria-label", "Remove this block");
+    cross.title = "Remove this block";
+    cross.textContent = "\u00d7";
+    cross.addEventListener("mousedown", (event) => event.preventDefault(), true);
+    cross.onclick = () => {
+      if (cross.getAttribute("data-armed") === "true") {
+        removeEditedBlock();
+        return;
+      }
+      cross.setAttribute("data-armed", "true");
+      cross.title = "Click again to remove this block";
+      focusEdited();
+    };
+    root.appendChild(cross);
+    return cross;
+  }
+
+  function disarmRemoveCross() {
+    const cross = shadow && shadow.querySelector(".lavish-edit-remove");
+    if (!cross || cross.getAttribute("data-armed") !== "true") return;
+    cross.removeAttribute("data-armed");
+    cross.title = "Remove this block";
+  }
+
+  function positionEditChrome(bar) {
     if (!inlineEdit) return;
     const rect = inlineEdit.el.getBoundingClientRect();
     const height = bar.getBoundingClientRect().height || 34;
     const above = rect.top - height - 8;
     bar.style.left = Math.max(8, rect.left) + "px";
     bar.style.top = (above > 8 ? above : Math.min(rect.bottom + 8, window.innerHeight - height - 8)) + "px";
+
+    const cross = shadow && shadow.querySelector(".lavish-edit-remove");
+    if (!cross) return;
+    cross.style.left = Math.min(rect.right - 11, window.innerWidth - 24) + "px";
+    cross.style.top = Math.max(rect.top - 11, 4) + "px";
   }
 
+  // Every tool says whether it is on, read from where the caret actually is: the list kinds from the
+  // block's tag, bold and italic from the browser, and the link from the element the caret sits in.
   function markPressedTools(bar) {
     const tag = currentEditTag();
     for (const button of [...bar.querySelectorAll("button")]) {
-      const pressed = button.getAttribute("data-tool") === tag;
+      const id = button.getAttribute("data-tool");
+      let pressed = id === tag;
+      if (id === "link") pressed = !!currentLink();
+      else if (id === "bold" || id === "italic") pressed = commandState(id);
       button.setAttribute("aria-pressed", String(pressed));
     }
   }
 
-  function runEditTool(id, bar, button) {
-    if (!inlineEdit) return;
-    if (id !== "remove") disarmRemove(bar);
-    if (id === "ul" || id === "ol") convertEditedBlock(currentEditTag() === id ? unlistedTag() : id, bar);
-    else if (id === "link") promptForLink(bar);
-    else if (id === "remove") {
-      // Deleting a block on one stray click, with no undo anywhere, is not a thing a review surface
-      // should do; the button asks once and means it the second time.
-      if (button.getAttribute("data-armed") === "true") {
-        removeEditedBlock();
-        return;
-      }
-      button.setAttribute("data-armed", "true");
-      button.textContent = "Remove?";
-    } else execEditCommand(id);
-    focusEdited();
+  function commandState(command) {
+    return typeof document.queryCommandState === "function" && !!document.queryCommandState(command);
   }
 
-  function disarmRemove(bar) {
-    const button = bar.querySelector('[data-tool="remove"]');
-    if (!button || button.getAttribute("data-armed") !== "true") return;
-    button.removeAttribute("data-armed");
-    button.textContent = "Remove";
+  // The link the caret is inside, when it belongs to the block being edited.
+  function currentLink() {
+    if (!inlineEdit) return null;
+    const selection = typeof document.getSelection === "function" ? document.getSelection() : null;
+    const node = selection && selection.anchorNode;
+    const el = /** @type {any} */ (!node ? null : node.nodeType === 1 ? node : node.parentElement);
+    const link = el && typeof el.closest === "function" ? el.closest("a") : null;
+    return link && inlineEdit.el.contains && inlineEdit.el.contains(link) ? link : null;
+  }
+
+  function unwrapElement(el) {
+    const parent = el.parentElement;
+    if (!parent || typeof parent.insertBefore !== "function") return;
+    for (const child of [...(el.childNodes || [])]) parent.insertBefore(child, el);
+    el.remove();
+  }
+
+  function runEditTool(id, bar) {
+    if (!inlineEdit) return;
+    disarmRemoveCross();
+    if (id === "ul" || id === "ol") convertEditedBlock(currentEditTag() === id ? unlistedTag() : id, bar);
+    else if (id === "link") promptForLink(bar);
+    else execEditCommand(id);
+    focusEdited();
   }
 
   // The block goes from the page and from the file at once. A refusal puts it back where it was.
@@ -2542,28 +2609,54 @@ export function createArtifactSdk(
     return typeof document.execCommand === "function" ? document.execCommand(command, false, value) : false;
   }
 
+  // The link tool works the way bold does: it says whether the caret is in one, and pressing it acts
+  // on that one rather than making a second. The field opens on the address the link already has, so
+  // fixing a url is a click and a keystroke, and emptying it takes the link off the words.
   function promptForLink(bar) {
-    if (bar.querySelector(".lavish-edit-url")) return;
+    const existing = bar.querySelector(".lavish-edit-url");
+    if (existing) {
+      existing.focus();
+      return;
+    }
+    const link = currentLink();
     const field = document.createElement("input");
     field.className = "lavish-edit-url";
     field.type = "url";
-    field.placeholder = "https://\u2026 then \u21a9";
+    field.value = link ? link.getAttribute("href") || "" : "";
+    field.placeholder = link ? "empty to unlink \u00b7 \u21a9" : "https://\u2026 then \u21a9";
     field.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        const url = field.value.trim();
-        field.remove();
-        focusEdited();
-        if (url) execEditCommand("createLink", url);
-      }
-      if (event.key === "Escape") {
-        event.preventDefault();
-        field.remove();
-        focusEdited();
-      }
+      if (event.key !== "Enter" && event.key !== "Escape") return;
+      event.preventDefault();
+      const url = field.value.trim();
+      field.remove();
+      if (event.key === "Enter") applyLink(link, url);
+      focusEdited();
+      markPressedTools(bar);
     });
     bar.appendChild(field);
     field.focus();
+    field.select?.();
+  }
+
+  function applyLink(link, url) {
+    if (link) {
+      if (url) link.setAttribute("href", url);
+      else unwrapElement(link);
+      return;
+    }
+    if (!url) return;
+    const selection = typeof document.getSelection === "function" ? document.getSelection() : null;
+    // Nothing selected: the address becomes the words, which is what a paste of a bare url wants.
+    if (!selection || selection.isCollapsed) execEditCommand("insertHTML", linkMarkup(url));
+    else execEditCommand("createLink", url);
+  }
+
+  function linkMarkup(url) {
+    const safe = String(url).replace(
+      /[&<>"]/g,
+      (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[char],
+    );
+    return '<a href="' + safe + '">' + safe + "</a>";
   }
 
   // The lines a block holds, as markup: one per <li> when it is already a list, otherwise one per
@@ -2599,7 +2692,7 @@ export function createArtifactSdk(
     inlineEdit.el = next;
     attachEdited(next);
     markPressedTools(bar);
-    positionEditToolbar(bar);
+    positionEditChrome(bar);
   }
 
   // Switching a list off returns it to the block it was made from, or to a paragraph when the file
@@ -2752,6 +2845,13 @@ export function createArtifactSdk(
       // tag an edit may write, so the break is inserted explicitly as one that is.
       event.preventDefault();
       if (!execEditCommand("insertLineBreak")) execEditCommand("insertHTML", "<br>");
+      return;
+    }
+    // The shortcut every editor has for a link, so the toolbar is never the only way there.
+    if ((event.metaKey || event.ctrlKey) && String(event.key || "").toLowerCase() === "k") {
+      event.preventDefault();
+      const bar = shadow && shadow.querySelector(".lavish-edit-toolbar");
+      if (bar) promptForLink(bar);
       return;
     }
     if (event.key === "Escape") {
@@ -3093,6 +3193,12 @@ export function createArtifactSdk(
     },
     true,
   );
+
+  // The toolbar follows the caret, so what is on and what a press will do stay true as it moves.
+  document.addEventListener("selectionchange", () => {
+    const bar = shadow && shadow.querySelector(".lavish-edit-toolbar");
+    if (bar) markPressedTools(bar);
+  });
 
   // Escape dismisses an open annotation card, exactly as its Cancel button does. Capture phase, so
   // it also works while the caret is in the card's own textarea.

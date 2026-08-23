@@ -42,6 +42,14 @@ function createElement(tag) {
     getAttributeNames() {
       return [...attributes.keys()];
     },
+    contains(node) {
+      let current = node;
+      while (current) {
+        if (current === element) return true;
+        current = current.parentElement;
+      }
+      return false;
+    },
     removeAttribute(name) {
       attributes.delete(name);
     },
@@ -71,9 +79,14 @@ function createElement(tag) {
       const index = element.parentElement?.children.indexOf(element) ?? -1;
       if (index >= 0) element.parentElement.children.splice(index, 1);
     },
-    // Card internals are looked up by class after innerHTML is assigned, so hand back a stable
-    // stub per selector: the test drives the very buttons the SDK wired up.
+    // Card internals are looked up by class after innerHTML is assigned, which this stub cannot
+    // parse, so hand back a stable stub per selector: the test drives the very buttons the SDK
+    // wired up. The editor builds its own elements as real children, so those are found rather than
+    // fabricated - fabricating one would tell the SDK a field it never opened is already there.
     querySelector(selector) {
+      const real = element.querySelectorAll(selector)[0];
+      if (real) return real;
+      if (String(selector).startsWith(".lavish-edit")) return null;
       if (!queried.has(selector)) queried.set(selector, createElement(selector.replace(/^[.#]/, "")));
       return queried.get(selector);
     },
@@ -277,6 +290,22 @@ function bootSdk() {
       return documentElement.children
         .flatMap((child) => child.shadowRoot?.children || [])
         .find((child) => child.className === "lavish-edit-toolbar");
+    },
+    // What a browser does when the caret moves, which is what keeps the toolbar honest.
+    moveCaret(node) {
+      selection.anchorNode = node;
+      for (const entry of documentListeners.filter((listener) => listener.type === "selectionchange")) {
+        entry.handler({});
+      }
+    },
+    urlField() {
+      const bar = this.toolbar();
+      return bar && bar.children.find((child) => child.className === "lavish-edit-url");
+    },
+    cross() {
+      return documentElement.children
+        .flatMap((child) => child.shadowRoot?.children || [])
+        .find((child) => child.className === "lavish-edit-remove");
     },
     tool(id) {
       const bar = this.toolbar();
@@ -723,6 +752,74 @@ test("a deleted atom keeps the numbers of the ones that remain", () => {
   assert.doesNotMatch(message.after, /data-lavish-atom="0"/);
 });
 
+function linkedParagraph(sdk) {
+  const paragraph = appendTo(sdk.body, createElement("p"));
+  const link = appendTo(paragraph, markupChild("a", "the anonymization RFC"));
+  link.setAttribute("href", "./old-path.md");
+  paragraph.textContent = "Named in the anonymization RFC, without counts.";
+  paragraph.childNodes = [
+    { nodeType: 3, textContent: "Named in " },
+    link,
+    { nodeType: 3, textContent: ", without counts." },
+  ];
+  return { paragraph, link };
+}
+
+test("the link tool says the caret is in a link, and opens on the address it has", () => {
+  const sdk = bootSdk();
+  const { paragraph, link } = linkedParagraph(sdk);
+
+  sdk.edit(paragraph);
+  sdk.moveCaret(link);
+
+  assert.equal(sdk.tool("link").getAttribute("aria-pressed"), "true", "on, the way bold is on");
+  sdk.tool("link").onclick();
+  assert.equal(sdk.urlField().value, "./old-path.md", "no retyping an address to fix it");
+});
+
+test("a new address changes the link that is there, rather than making another", () => {
+  const sdk = bootSdk();
+  const { paragraph, link } = linkedParagraph(sdk);
+
+  sdk.edit(paragraph);
+  sdk.moveCaret(link);
+  sdk.tool("link").onclick();
+  const field = sdk.urlField();
+  field.value = "../20260724-rfc-data-stack-anonymization/1-RFC.md";
+  field.listeners.find((entry) => entry.type === "keydown").handler({ key: "Enter", preventDefault() {} });
+
+  assert.equal(link.getAttribute("href"), "../20260724-rfc-data-stack-anonymization/1-RFC.md");
+  assert.deepEqual(sdk.execCommands, [], "the browser is not asked to create a second link");
+  assert.equal(sdk.urlField(), undefined, "and the field closes");
+});
+
+test("emptying the address takes the link off the words, keeping the words", () => {
+  const sdk = bootSdk();
+  const { paragraph, link } = linkedParagraph(sdk);
+
+  sdk.edit(paragraph);
+  sdk.moveCaret(link);
+  sdk.tool("link").onclick();
+  const field = sdk.urlField();
+  field.value = "   ";
+  field.listeners.find((entry) => entry.type === "keydown").handler({ key: "Enter", preventDefault() {} });
+
+  assert.equal(paragraph.children.includes(link), false, "the link is gone");
+  assert.equal(sdk.execCommands.length, 0);
+});
+
+test("cmd+k opens the link field without reaching for the toolbar", () => {
+  const sdk = bootSdk();
+  const { paragraph } = linkedParagraph(sdk);
+
+  sdk.edit(paragraph);
+  paragraph.listeners
+    .find((entry) => entry.type === "keydown")
+    .handler({ key: "k", metaKey: true, preventDefault() {} });
+
+  assert.ok(sdk.urlField(), "the field is there");
+});
+
 test("an element holding markup is refused rather than edited", () => {
   const sdk = bootSdk();
   const wrapper = appendTo(sdk.body, createElement("div"));
@@ -775,7 +872,7 @@ test("editing opens a toolbar of the tools the file can hold", () => {
       .toolbar()
       .children.filter((child) => child.tagName === "BUTTON")
       .map((child) => child.getAttribute("data-tool")),
-    ["ul", "ol", "bold", "italic", "link", "remove"],
+    ["ul", "ol", "bold", "italic", "link"],
   );
 
   paragraph.listeners.find((entry) => entry.type === "keydown").handler({ key: "Escape", preventDefault() {} });
@@ -812,13 +909,13 @@ test("remove asks once, then takes the block out of the page and the file", () =
   const paragraph = editableParagraph(sdk, "The goal of the tool");
 
   sdk.edit(paragraph);
-  sdk.tool("remove").onclick();
+  sdk.cross().onclick();
 
-  assert.equal(sdk.tool("remove").textContent, "Remove?", "one click only arms it");
+  assert.equal(sdk.cross().getAttribute("data-armed"), "true", "one click only arms it");
   assert.ok(sdk.body.children.includes(paragraph));
   assert.ok(!sdk.posted.some((message) => message.scope === "remove"));
 
-  sdk.tool("remove").onclick();
+  sdk.cross().onclick();
 
   assert.equal(sdk.body.children.includes(paragraph), false);
   const message = sdk.posted.at(-1);
@@ -827,6 +924,7 @@ test("remove asks once, then takes the block out of the page and the file", () =
   assert.equal(message.before, "The goal of the tool");
   assert.equal(message.after, "");
   assert.equal(sdk.toolbar(), undefined);
+  assert.equal(sdk.cross(), undefined, "the cross goes with the toolbar");
 });
 
 test("a refused removal puts the block back where it was", () => {
@@ -835,8 +933,8 @@ test("a refused removal puts the block back where it was", () => {
   const second = editableParagraph(sdk, "What it is not");
 
   sdk.edit(first);
-  sdk.tool("remove").onclick();
-  sdk.tool("remove").onclick();
+  sdk.cross().onclick();
+  sdk.cross().onclick();
   assert.deepEqual(sdk.body.children, [second]);
 
   sdk.sendChromeMessage({ type: "lavish:textEditResult", ok: false, error: "stale" });
