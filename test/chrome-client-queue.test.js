@@ -16,7 +16,7 @@ const servedChromeIds = new Set(
   ),
 );
 
-/** @typedef {{ key: string, file: string, layoutGateEnabled?: boolean, layoutGateMaxHoldMs?: number, modeToggleHotkeyKey?: string, annotateModeHotkeyKey?: string, editModeHotkeyKey?: string, initialLayoutWarnings?: any[], chromeLoadToken?: string, initialArtifactRevision?: number, initialArtifactLoadToken?: string, initialArtifactLoadSequence?: number, attachmentMaxBytes?: number, attachmentMaxCount?: number, attachmentAcceptedMime?: string[], initialEnded?: boolean, initialEndedBy?: string | null }} HarnessSessionData */
+/** @typedef {{ key: string, file: string, layoutGateEnabled?: boolean, layoutGateMaxHoldMs?: number, modeToggleHotkeyKey?: string, annotateModeHotkeyKey?: string, editModeHotkeyKey?: string, panelHotkeyKey?: string, initialLayoutWarnings?: any[], chromeLoadToken?: string, initialArtifactRevision?: number, initialArtifactLoadToken?: string, initialArtifactLoadSequence?: number, attachmentMaxBytes?: number, attachmentMaxCount?: number, attachmentAcceptedMime?: string[], initialEnded?: boolean, initialEndedBy?: string | null }} HarnessSessionData */
 /** @type {HarnessSessionData} */
 const defaultSessionData = {
   key: "abc",
@@ -24,6 +24,7 @@ const defaultSessionData = {
   modeToggleHotkeyKey: "i",
   annotateModeHotkeyKey: "a",
   editModeHotkeyKey: "e",
+  panelHotkeyKey: "c",
   attachmentAcceptedMime: ["image/png", "image/jpeg", "image/webp"],
 };
 
@@ -4040,6 +4041,21 @@ test("a letter typed into the composer stays a letter", async () => {
   assert.equal(event.defaultPrevented, false);
   assert.equal(chrome.postedToFrame.length, before);
   assert.equal(chrome.element("editMode")["aria-pressed"], undefined);
+});
+
+test("c collapses and restores the panel, unless it is being typed", async () => {
+  const chrome = await createChromeHarness();
+
+  chrome.dispatchDocumentKeydown({ key: "c" });
+  assert.equal(chrome.element("body").classList.contains("panel-collapsed"), true);
+
+  const composer = chrome.element("chatInput");
+  composer.tagName = "TEXTAREA";
+  chrome.dispatchDocumentKeydown({ key: "c", target: composer });
+  assert.equal(chrome.element("body").classList.contains("panel-collapsed"), true, "a typed c is a letter");
+
+  chrome.dispatchDocumentKeydown({ key: "C" });
+  assert.equal(chrome.element("body").classList.contains("panel-collapsed"), false);
 });
 
 test("the conversation switch collapses and restores the panel", async () => {

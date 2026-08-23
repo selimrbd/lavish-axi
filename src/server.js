@@ -30,7 +30,8 @@ import {
   MODE_TOGGLE_HOTKEY_KEY,
   ANNOTATE_MODE_HOTKEY_KEY,
   EDIT_MODE_HOTKEY_KEY,
-  modeHotkeyFor,
+  PANEL_HOTKEY_KEY,
+  hotkeyFor,
 } from "./artifact-sdk.js";
 import {
   activeLayoutWarningCount,
@@ -2135,6 +2136,7 @@ export function createChromeHtml(
     modeToggleHotkeyKey: MODE_TOGGLE_HOTKEY_KEY,
     annotateModeHotkeyKey: ANNOTATE_MODE_HOTKEY_KEY,
     editModeHotkeyKey: EDIT_MODE_HOTKEY_KEY,
+    panelHotkeyKey: PANEL_HOTKEY_KEY,
     attachmentMaxBytes,
     attachmentMaxCount,
     attachmentAcceptedMime: acceptedMime,
@@ -2146,7 +2148,7 @@ export function createChromeHtml(
   const modeToggleHint = `Toggle annotate/explore mode (⌘${modeHotkeyUpper} / Ctrl+${modeHotkeyUpper})`;
   const annotateHint = `Click an element to tell the agent about it (${ANNOTATE_MODE_HOTKEY_KEY})`;
   const editHint = `Click an element to rewrite its text in the file (${EDIT_MODE_HOTKEY_KEY})`;
-  const panelHint = "Show or hide the conversation";
+  const panelHint = `Show or hide the conversation (${PANEL_HOTKEY_KEY})`;
   return `<!doctype html>
 <html>
 <head>
@@ -2242,8 +2244,9 @@ const isNativeInteractiveControl=${isNativeInteractiveControl.toString()};
 const MODE_TOGGLE_HOTKEY_KEY=${JSON.stringify(MODE_TOGGLE_HOTKEY_KEY)};
 const ANNOTATE_MODE_HOTKEY_KEY=${JSON.stringify(ANNOTATE_MODE_HOTKEY_KEY)};
 const EDIT_MODE_HOTKEY_KEY=${JSON.stringify(EDIT_MODE_HOTKEY_KEY)};
+const PANEL_HOTKEY_KEY=${JSON.stringify(PANEL_HOTKEY_KEY)};
 const isModeToggleHotkeyEvent=${isModeToggleHotkeyEvent.toString()};
-const modeHotkeyFor=${modeHotkeyFor.toString()};
+const hotkeyFor=${hotkeyFor.toString()};
 const classifySevereTextOverflow=${classifySevereTextOverflow.toString()};
 const classifyMaterialRectEscape=${classifyMaterialRectEscape.toString()};
 const isMaterialPageOverflow=${isMaterialPageOverflow.toString()};

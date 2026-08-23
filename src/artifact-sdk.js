@@ -8,20 +8,28 @@ export const LAVISH_INTERNAL_QUEUE_KEY = "_lavishQueueKey";
 export const MODE_TOGGLE_HOTKEY_KEY = "i";
 export const ANNOTATE_MODE_HOTKEY_KEY = "a";
 export const EDIT_MODE_HOTKEY_KEY = "e";
+export const PANEL_HOTKEY_KEY = "c";
 
 export function isModeToggleHotkeyEvent(event) {
   if (event.shiftKey || event.altKey) return false;
   return Boolean(event.metaKey || event.ctrlKey) && String(event.key || "").toLowerCase() === MODE_TOGGLE_HOTKEY_KEY;
 }
 
-// Which mode a bare keypress asks for, or null. A bare letter is a hotkey only when nothing is
+// Which switch a bare keypress asks for, or null. A bare letter is a hotkey only when nothing is
 // being typed into: a form field, an element being edited in place, or Lavish's own UI, whose
 // keystrokes reach the document retargeted to the shadow host.
-export function modeHotkeyFor(event, activeElement = null) {
+export function hotkeyFor(event, activeElement = null) {
   if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return null;
   const key = String(event.key || "").toLowerCase();
   if (!key) return null;
-  const mode = key === ANNOTATE_MODE_HOTKEY_KEY ? "annotate" : key === EDIT_MODE_HOTKEY_KEY ? "edit" : null;
+  const mode =
+    key === ANNOTATE_MODE_HOTKEY_KEY
+      ? "annotate"
+      : key === EDIT_MODE_HOTKEY_KEY
+        ? "edit"
+        : key === PANEL_HOTKEY_KEY
+          ? "panel"
+          : null;
   if (!mode) return null;
   const typing = "input,textarea,select,[contenteditable]:not([contenteditable='false']),[data-lavish-ui]";
   for (const node of [event.target, activeElement]) {
@@ -2927,15 +2935,20 @@ export function createArtifactSdk(
     true,
   );
 
-  // `a` and `e` arm the same two switches the chrome shows, and modeHotkeyFor is what keeps a bare
+  // `a`, `e` and `c` press the same switches the chrome shows, and hotkeyFor is what keeps a bare
   // letter from firing while it is being typed into a field, a card or an element being edited.
+  const HOTKEY_MESSAGES = {
+    annotate: "lavish:toggleAnnotationMode",
+    edit: "lavish:toggleEditMode",
+    panel: "lavish:togglePanel",
+  };
   document.addEventListener(
     "keydown",
     (event) => {
-      const mode = modeHotkeyFor(event, document.activeElement);
-      if (!mode) return;
+      const pressed = hotkeyFor(event, document.activeElement);
+      if (!pressed) return;
       event.preventDefault();
-      postArtifactMessage(mode === "edit" ? "lavish:toggleEditMode" : "lavish:toggleAnnotationMode");
+      postArtifactMessage(HOTKEY_MESSAGES[pressed]);
     },
     true,
   );

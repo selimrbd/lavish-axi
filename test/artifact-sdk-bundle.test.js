@@ -644,6 +644,9 @@ test("a bare a or e asks the chrome to switch mode, unless it is being typed", (
   assert.equal(sdk.pressKey("a"), true);
   assert.equal(sdk.posted.at(-1).type, "lavish:toggleAnnotationMode");
 
+  assert.equal(sdk.pressKey("c"), true);
+  assert.equal(sdk.posted.at(-1).type, "lavish:togglePanel");
+
   const field = createElement("textarea");
   const before = sdk.posted.length;
   assert.equal(sdk.pressKey("e", field), false);

@@ -22,6 +22,7 @@ const initialChat = Array.isArray(sessionData.initialChat) ? sessionData.initial
 const MODE_TOGGLE_HOTKEY_KEY = String(sessionData.modeToggleHotkeyKey || "").toLowerCase();
 const ANNOTATE_MODE_HOTKEY_KEY = String(sessionData.annotateModeHotkeyKey || "").toLowerCase();
 const EDIT_MODE_HOTKEY_KEY = String(sessionData.editModeHotkeyKey || "").toLowerCase();
+const PANEL_HOTKEY_KEY = String(sessionData.panelHotkeyKey || "").toLowerCase();
 const attachmentMaxBytes = Number(sessionData.attachmentMaxBytes) || 0;
 const attachmentMaxCount = Number(sessionData.attachmentMaxCount) || 4;
 // Threaded from the server's single accepted-image list, which also drives the
@@ -100,14 +101,21 @@ function isModeToggleHotkeyEvent(event) {
   return Boolean(event.metaKey || event.ctrlKey) && String(event.key || "").toLowerCase() === MODE_TOGGLE_HOTKEY_KEY;
 }
 
-// Mirrors modeHotkeyFor in artifact-sdk.js: the chrome is served as a plain script and cannot
-// import it, so both sides have to answer the same keypress the same way. A bare letter is a
-// hotkey only when nothing is being typed into.
-function modeHotkeyFor(event, activeElement = null) {
+// Mirrors hotkeyFor in artifact-sdk.js: the chrome is served as a plain script and cannot import
+// it, so both sides have to answer the same keypress the same way. A bare letter is a hotkey only
+// when nothing is being typed into.
+function hotkeyFor(event, activeElement = null) {
   if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return null;
   const key = String(event.key || "").toLowerCase();
   if (!key) return null;
-  const mode = key === ANNOTATE_MODE_HOTKEY_KEY ? "annotate" : key === EDIT_MODE_HOTKEY_KEY ? "edit" : null;
+  const mode =
+    key === ANNOTATE_MODE_HOTKEY_KEY
+      ? "annotate"
+      : key === EDIT_MODE_HOTKEY_KEY
+        ? "edit"
+        : key === PANEL_HOTKEY_KEY
+          ? "panel"
+          : null;
   if (!mode) return null;
   const typing = "input,textarea,select,[contenteditable]:not([contenteditable='false'])";
   for (const node of [event.target, activeElement]) {
@@ -2857,6 +2865,7 @@ window.addEventListener("message", (event) => {
   if (msg.type === "lavish:endSession") endSession();
   if (msg.type === "lavish:toggleAnnotationMode") toggleAnnotationMode();
   if (msg.type === "lavish:toggleEditMode") toggleEditMode();
+  if (msg.type === "lavish:togglePanel") togglePanel();
 });
 
 // The sandboxed artifact iframe can't reach the loopback server (opaque origin),
@@ -3181,10 +3190,11 @@ document.addEventListener(
 document.addEventListener(
   "keydown",
   (event) => {
-    const mode = modeHotkeyFor(event, document.activeElement);
-    if (!mode) return;
+    const pressed = hotkeyFor(event, document.activeElement);
+    if (!pressed) return;
     event.preventDefault();
-    if (mode === "edit") toggleEditMode();
+    if (pressed === "edit") toggleEditMode();
+    else if (pressed === "panel") togglePanel();
     else toggleAnnotationMode();
   },
   true,
