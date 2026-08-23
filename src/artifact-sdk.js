@@ -2292,7 +2292,6 @@ export function createArtifactSdk(
   // text, the tags the toolbar writes, and nothing else - so a typo fix can never overwrite the
   // markup an author put there on purpose.
   const EDITABLE_MARKUP_TAGS = ["ul", "ol", "li", "strong", "em", "b", "i", "br", "a"];
-  const LIST_PARTS = ["ul", "ol", "li"];
 
   function isEditableMarkup(el) {
     const tag = el.tagName ? el.tagName.toLowerCase() : "";
@@ -2324,17 +2323,24 @@ export function createArtifactSdk(
   function editTargetEl(target) {
     let el = target;
     while (el && el.nodeType === 1) {
-      if (!isLavishUi(el) && isEditableElement(el)) return wholeList(el);
+      if (!isLavishUi(el) && isEditableElement(el)) return wholeBlock(el);
       el = el.parentElement;
     }
     return null;
   }
 
-  // A list is edited whole rather than one item at a time: bullets are added to and removed from the
-  // list, and the toolbar reads its state from the list's own tag.
-  function wholeList(el) {
+  // The unit of an edit is the block, never a fragment of one. A bold run, a link and a list item
+  // are all parts of something larger: clicking one lifts to the block it belongs to, so the caret
+  // lands in the paragraph the reviewer sees, and the toolbar acts on the list rather than on a
+  // single bullet. It stops as soon as the parent is something an edit may not rewrite.
+  function wholeBlock(el) {
     let block = el;
-    while (block.parentElement && LIST_PARTS.includes(block.parentElement.tagName.toLowerCase())) {
+    while (
+      EDITABLE_MARKUP_TAGS.includes(block.tagName.toLowerCase()) &&
+      block.parentElement &&
+      !isLavishUi(block.parentElement) &&
+      isEditableElement(block.parentElement)
+    ) {
       block = block.parentElement;
     }
     return block;

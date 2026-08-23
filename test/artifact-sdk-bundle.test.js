@@ -659,7 +659,7 @@ test("clicking inside a list edits the whole list, not the item", () => {
 test("a paragraph carrying a link is editable, and a styled one is not", () => {
   const sdk = bootSdk();
   const linked = appendTo(sdk.body, createElement("p"));
-  const link = markupChild("a", "data stack anonymization RFC");
+  const link = appendTo(linked, markupChild("a", "data stack anonymization RFC"));
   link.setAttribute("href", "../20260724-rfc-data-stack-anonymization/1-RFC.md");
   linked.textContent =
     "Every question has started the same way: the data stack anonymization RFC named sixteen fields.";
@@ -667,6 +667,13 @@ test("a paragraph carrying a link is editable, and a styled one is not", () => {
 
   sdk.edit(linked);
   assert.equal(linked.getAttribute("contenteditable"), "true");
+
+  // Clicking the link itself edits the paragraph around it, not the link on its own.
+  sdk.sendChromeMessage({ type: "lavish:setEditMode", enabled: false });
+  linked.removeAttribute("contenteditable");
+  sdk.edit(link);
+  assert.equal(linked.getAttribute("contenteditable"), "true");
+  assert.equal(link.getAttribute("contenteditable"), null);
 
   const styled = appendTo(sdk.body, createElement("p"));
   const badge = markupChild("strong", "promise");
@@ -699,6 +706,23 @@ test("a caret with nothing to aim at goes to the end of the block", () => {
   sdk.edit(paragraph);
 
   assert.equal(sdk.selection.ranges.at(-1).kind, "node-contents");
+});
+
+test("clicking a bold run edits the paragraph it belongs to", () => {
+  const sdk = bootSdk();
+  const paragraph = appendTo(sdk.body, createElement("p"));
+  const bold = appendTo(paragraph, markupChild("strong", "scan a source, read the real values"));
+  paragraph.textContent = "The data profiler exists to make that loop repeatable: scan a source. Not an anonymizer.";
+  paragraph.childNodes = [
+    { nodeType: 3, textContent: "The data profiler exists to make that loop repeatable: " },
+    bold,
+    { nodeType: 3, textContent: " Not an anonymizer." },
+  ];
+
+  sdk.edit(bold);
+
+  assert.equal(paragraph.getAttribute("contenteditable"), "true");
+  assert.equal(bold.getAttribute("contenteditable"), null, "a bold run is part of a block, not one");
 });
 
 test("an element holding markup is refused rather than edited", () => {
