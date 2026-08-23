@@ -2279,12 +2279,30 @@ export function createArtifactSdk(
     scheduleReviewStateReport();
   }
 
-  // Editing is offered only where the file can be patched safely - an element holding one run of
-  // text and nothing else - so markup is never overwritten by a typo fix.
-  function isTextOnlyElement(el) {
+  // What the page offers to edit is exactly what the file will accept, so an edit never starts on a
+  // block the server is going to refuse. Mirrors subtreeIsEditable in text-edit.js: a block may hold
+  // text, the tags the toolbar writes, and nothing else - so a typo fix can never overwrite the
+  // markup an author put there on purpose.
+  const EDITABLE_MARKUP_TAGS = ["ul", "ol", "li", "strong", "em", "b", "i", "br", "a"];
+  const LIST_PARTS = ["ul", "ol", "li"];
+
+  function isEditableMarkup(el) {
+    const tag = el.tagName ? el.tagName.toLowerCase() : "";
+    if (!EDITABLE_MARKUP_TAGS.includes(tag)) return false;
+    const names = typeof el.getAttributeNames === "function" ? el.getAttributeNames() : [];
+    return names.every((name) => tag === "a" && name === "href");
+  }
+
+  function subtreeIsEditable(el) {
+    return [...(el.childNodes || [])].every(
+      (node) => node.nodeType === 3 || (node.nodeType === 1 && isEditableMarkup(node) && subtreeIsEditable(node)),
+    );
+  }
+
+  function isEditableElement(el) {
     if (!el || el.nodeType !== 1 || !el.textContent || !el.textContent.trim()) return false;
     const nodes = el.childNodes ? [...el.childNodes] : [];
-    return nodes.length > 0 && nodes.every((node) => node.nodeType === 3);
+    return nodes.length > 0 && subtreeIsEditable(el);
   }
 
   // Lavish's own injected elements are left out, so the position counted here is the position the
@@ -2298,10 +2316,20 @@ export function createArtifactSdk(
   function editTargetEl(target) {
     let el = target;
     while (el && el.nodeType === 1) {
-      if (!isLavishUi(el) && isTextOnlyElement(el)) return el;
+      if (!isLavishUi(el) && isEditableElement(el)) return wholeList(el);
       el = el.parentElement;
     }
     return null;
+  }
+
+  // A list is edited whole rather than one item at a time: bullets are added to and removed from the
+  // list, and the toolbar reads its state from the list's own tag.
+  function wholeList(el) {
+    let block = el;
+    while (block.parentElement && LIST_PARTS.includes(block.parentElement.tagName.toLowerCase())) {
+      block = block.parentElement;
+    }
+    return block;
   }
 
   function flashOutline(el, colour) {

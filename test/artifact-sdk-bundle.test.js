@@ -575,11 +575,48 @@ test("clicking an element edits it in place while edit is armed", () => {
   assert.equal(sdk.cards().length, 0, "editing never opens an annotation card");
 });
 
+function markupChild(tag, text = "") {
+  const child = createElement(tag);
+  child.textContent = text;
+  child.childNodes = text ? [{ nodeType: 3, textContent: text }] : [];
+  child.nodeType = 1;
+  return child;
+}
+
+test("a block holding the tags the toolbar writes stays editable", () => {
+  const sdk = bootSdk();
+  const paragraph = editableParagraph(sdk, "Profile a source");
+  paragraph.innerHTML = "Profile a source<br>Review each field";
+  paragraph.childNodes = [
+    { nodeType: 3, textContent: "Profile a source" },
+    markupChild("br"),
+    { nodeType: 3, textContent: "Review each field" },
+  ];
+
+  sdk.edit(paragraph);
+
+  assert.equal(paragraph.getAttribute("contenteditable"), "true", "a line break does not lock the block");
+});
+
+test("clicking inside a list edits the whole list, not the item", () => {
+  const sdk = bootSdk();
+  const list = appendTo(sdk.body, createElement("ul"));
+  const item = markupChild("li", "Profile a source");
+  appendTo(list, item);
+  list.textContent = "Profile a source";
+  list.childNodes = [item];
+
+  sdk.edit(item);
+
+  assert.equal(list.getAttribute("contenteditable"), "true");
+  assert.equal(item.getAttribute("contenteditable"), null, "the item is not edited on its own");
+});
+
 test("an element holding markup is refused rather than edited", () => {
   const sdk = bootSdk();
   const wrapper = appendTo(sdk.body, createElement("div"));
   wrapper.textContent = "a heading and a paragraph";
-  wrapper.childNodes = [createElement("h2"), createElement("p")];
+  wrapper.childNodes = [markupChild("h2", "a heading"), markupChild("p", "and a paragraph")];
 
   sdk.edit(wrapper);
 
