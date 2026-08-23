@@ -2658,6 +2658,18 @@ export function createArtifactSdk(
     true,
   );
 
+  // Escape dismisses an open annotation card, exactly as its Cancel button does. Capture phase, so
+  // it also works while the caret is in the card's own textarea.
+  document.addEventListener(
+    "keydown",
+    (event) => {
+      if (event.key !== "Escape" || !activeCardContext) return;
+      event.preventDefault();
+      closeCard();
+    },
+    true,
+  );
+
   // `a` and `e` arm the same two switches the chrome shows, and modeHotkeyFor is what keeps a bare
   // letter from firing while it is being typed into a field, a card or an element being edited.
   document.addEventListener(

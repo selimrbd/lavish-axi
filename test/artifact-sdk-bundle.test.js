@@ -219,7 +219,7 @@ function bootSdk() {
       this.setMode("edit");
       this.rawClick(target);
     },
-    modeHotkey(key, target) {
+    pressKey(key, target) {
       const listeners = documentListeners.filter((entry) => entry.type === "keydown");
       assert.ok(listeners.length > 0, "the SDK registers a document keydown listener");
       let prevented = false;
@@ -486,6 +486,17 @@ test("clicking an element opens a card while annotate is armed", () => {
   assert.equal(sdk.cards().length, 1, "annotate is the mode a session opens in");
 });
 
+test("escape dismisses an open annotation card", () => {
+  const sdk = bootSdk();
+  sdk.click(editableParagraph(sdk, "The goal of the tool"));
+  assert.equal(sdk.cards().length, 1);
+
+  assert.equal(sdk.pressKey("Escape"), true);
+
+  assert.equal(sdk.cards().length, 0);
+  assert.equal(sdk.pressKey("Escape"), false, "with no card open, escape is the artifact's own");
+});
+
 test("clicking an element edits it in place while edit is armed", () => {
   const sdk = bootSdk();
   const paragraph = editableParagraph(sdk, "The goal of the tool");
@@ -524,14 +535,14 @@ test("arming one mode disarms the other", () => {
 test("a bare a or e asks the chrome to switch mode, unless it is being typed", () => {
   const sdk = bootSdk();
 
-  assert.equal(sdk.modeHotkey("e"), true);
+  assert.equal(sdk.pressKey("e"), true);
   assert.equal(sdk.posted.at(-1).type, "lavish:toggleEditMode");
-  assert.equal(sdk.modeHotkey("a"), true);
+  assert.equal(sdk.pressKey("a"), true);
   assert.equal(sdk.posted.at(-1).type, "lavish:toggleAnnotationMode");
 
   const field = createElement("textarea");
   const before = sdk.posted.length;
-  assert.equal(sdk.modeHotkey("e", field), false);
+  assert.equal(sdk.pressKey("e", field), false);
   assert.equal(sdk.posted.length, before, "a letter typed into a field is just a letter");
 });
 
