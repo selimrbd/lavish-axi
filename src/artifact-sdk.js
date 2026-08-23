@@ -1253,7 +1253,7 @@ export function createArtifactSdk(
       : ":root{--lavish-accent:#f4c95d;--lavish-annotate-outline:2px solid var(--lavish-accent);--lavish-annotate-offset:2px}*{cursor:default!important}";
     return (
       head +
-      "[data-lavish-action],[data-lavish-action] *{cursor:pointer!important}input,textarea,[contenteditable]:not([contenteditable='false']){cursor:text!important}button,select,label,option,input[type='button'],input[type='submit'],input[type='reset'],input[type='checkbox'],input[type='radio'],input[type='file'],input[type='color'],input[type='range'],input[type='image']{cursor:pointer!important}"
+      "[data-lavish-atom]{outline:1px dashed rgba(125,211,252,.75);outline-offset:1px;cursor:not-allowed!important}[data-lavish-action],[data-lavish-action] *{cursor:pointer!important}input,textarea,[contenteditable]:not([contenteditable='false']){cursor:text!important}button,select,label,option,input[type='button'],input[type='submit'],input[type='reset'],input[type='checkbox'],input[type='radio'],input[type='file'],input[type='color'],input[type='range'],input[type='image']{cursor:pointer!important}"
     );
   }
 
@@ -2288,28 +2288,86 @@ export function createArtifactSdk(
   }
 
   // What the page offers to edit is exactly what the file will accept, so an edit never starts on a
-  // block the server is going to refuse. Mirrors subtreeIsEditable in text-edit.js: a block may hold
-  // text, the tags the toolbar writes, and nothing else - so a typo fix can never overwrite the
-  // markup an author put there on purpose.
+  // block the server is going to refuse. Mirrors isEditableBlock in text-edit.js: a block is
+  // editable when it holds no block, its writable tags are the reviewer's to rewrite, and anything
+  // else inside it is an atom - the author's own markup, frozen while the reviewer types around it
+  // and put back from the file byte for byte on save.
   const EDITABLE_MARKUP_TAGS = ["ul", "ol", "li", "strong", "em", "b", "i", "br", "a"];
+  const BLOCK_LEVEL_TAGS = [
+    "address",
+    "article",
+    "aside",
+    "blockquote",
+    "canvas",
+    "dd",
+    "details",
+    "div",
+    "dl",
+    "dt",
+    "fieldset",
+    "figcaption",
+    "figure",
+    "footer",
+    "form",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "header",
+    "hr",
+    "main",
+    "nav",
+    "p",
+    "pre",
+    "section",
+    "table",
+    "tbody",
+    "td",
+    "tfoot",
+    "th",
+    "thead",
+    "tr",
+    "video",
+  ];
+  const ATOM_MARKER_ATTRIBUTE = "data-lavish-atom";
 
-  function isEditableMarkup(el) {
-    const tag = el.tagName ? el.tagName.toLowerCase() : "";
+  function tagOf(el) {
+    return el && el.tagName ? el.tagName.toLowerCase() : "";
+  }
+
+  function isWritableMarkup(el) {
+    const tag = tagOf(el);
     if (!EDITABLE_MARKUP_TAGS.includes(tag)) return false;
     const names = typeof el.getAttributeNames === "function" ? el.getAttributeNames() : [];
     return names.every((name) => tag === "a" && name === "href");
   }
 
-  function subtreeIsEditable(el) {
-    return [...(el.childNodes || [])].every(
-      (node) => node.nodeType === 3 || (node.nodeType === 1 && isEditableMarkup(node) && subtreeIsEditable(node)),
-    );
+  function isEditableBlock(el) {
+    return [...(el.childNodes || [])].every((node) => {
+      if (node.nodeType !== 1) return node.nodeType === 3;
+      if (BLOCK_LEVEL_TAGS.includes(tagOf(node))) return false;
+      return !isWritableMarkup(node) || isEditableBlock(node);
+    });
   }
 
   function isEditableElement(el) {
     if (!el || el.nodeType !== 1 || !el.textContent || !el.textContent.trim()) return false;
+    if (BLOCK_LEVEL_TAGS.includes(tagOf(el)) && !el.childNodes?.length) return false;
     const nodes = el.childNodes ? [...el.childNodes] : [];
-    return nodes.length > 0 && subtreeIsEditable(el);
+    return nodes.length > 0 && isEditableBlock(el);
+  }
+
+  // Every atom of a block, outermost first and in document order: the same walk the server makes
+  // over the file, so the numbers mean the same thing on both sides.
+  function atomsOf(el, found = []) {
+    for (const node of [...(el.childNodes || [])]) {
+      if (node.nodeType !== 1) continue;
+      if (!isWritableMarkup(node)) found.push(node);
+      else atomsOf(node, found);
+    }
+    return found;
   }
 
   // Lavish's own injected elements are left out, so the position counted here is the position the
@@ -2329,14 +2387,14 @@ export function createArtifactSdk(
     return null;
   }
 
-  // The unit of an edit is the block, never a fragment of one. A bold run, a link and a list item
-  // are all parts of something larger: clicking one lifts to the block it belongs to, so the caret
-  // lands in the paragraph the reviewer sees, and the toolbar acts on the list rather than on a
-  // single bullet. It stops as soon as the parent is something an edit may not rewrite.
+  // The unit of an edit is the block, never a fragment of one. A bold run, a link, a list item and
+  // an author's styled span are all parts of something larger: clicking one lifts to the block it
+  // belongs to, so the caret lands in the paragraph the reviewer sees, and the toolbar acts on the
+  // list rather than on a single bullet. It stops at the first block-level parent.
   function wholeBlock(el) {
     let block = el;
     while (
-      EDITABLE_MARKUP_TAGS.includes(block.tagName.toLowerCase()) &&
+      !BLOCK_LEVEL_TAGS.includes(tagOf(block)) &&
       block.parentElement &&
       !isLavishUi(block.parentElement) &&
       isEditableElement(block.parentElement)
@@ -2554,7 +2612,40 @@ export function createArtifactSdk(
     if (inlineEdit && typeof inlineEdit.el.focus === "function") inlineEdit.el.focus();
   }
 
+  // Atoms are numbered while the block still matches the file, and keep their number for as long as
+  // the edit lasts: deleting the first one must not renumber the rest, or the file would get the
+  // wrong bytes back.
+  function freezeAtoms(el) {
+    atomsOf(el).forEach((atom, index) => {
+      atom.setAttribute(ATOM_MARKER_ATTRIBUTE, String(index));
+      atom.setAttribute("contenteditable", "false");
+    });
+  }
+
+  function thawAtoms(el) {
+    for (const atom of atomsOf(el)) {
+      atom.removeAttribute(ATOM_MARKER_ATTRIBUTE);
+      atom.removeAttribute("contenteditable");
+    }
+  }
+
+  // What the block holds, with every atom standing in as its own number. The swap happens on the
+  // live element and is undone immediately, so nothing the reviewer sees moves.
+  function markupWithAtoms(el) {
+    const atoms = atomsOf(el).filter((atom) => atom.getAttribute(ATOM_MARKER_ATTRIBUTE) !== null);
+    const swapped = atoms.map((atom) => {
+      const marker = document.createElement("span");
+      marker.setAttribute(ATOM_MARKER_ATTRIBUTE, atom.getAttribute(ATOM_MARKER_ATTRIBUTE));
+      atom.replaceWith(marker);
+      return { atom, marker };
+    });
+    const markup = el.innerHTML;
+    for (const { atom, marker } of swapped) marker.replaceWith(atom);
+    return markup;
+  }
+
   function attachEdited(el) {
+    freezeAtoms(el);
     el.setAttribute("data-lavish-editing", "true");
     el.setAttribute("contenteditable", "true");
     el.style.outline = "2px solid #7dd3fc";
@@ -2565,6 +2656,7 @@ export function createArtifactSdk(
   }
 
   function detachEdited(el) {
+    thawAtoms(el);
     el.removeEventListener("keydown", onInlineEditKeydown, true);
     el.removeEventListener("blur", commitInlineEdit, true);
     el.removeAttribute("contenteditable");
@@ -2584,8 +2676,12 @@ export function createArtifactSdk(
       index: tagIndexOf(el),
       originalTag: tag,
       attributes: attributesOf(el),
+      // Read after freezing, so what is compared at commit is the same shape that will be sent.
+      markup: "",
+      pendingMarkup: "",
     };
     attachEdited(el);
+    inlineEdit.markup = markupWithAtoms(el);
     placeCaret(el, point);
     showEditToolbar();
   }
@@ -2636,6 +2732,8 @@ export function createArtifactSdk(
     const state = inlineEdit;
     inlineEdit = null;
     closeEditToolbar();
+    // Read while the atoms still carry their numbers, which detaching takes away.
+    state.pendingMarkup = markupWithAtoms(state.el);
     detachEdited(state.el);
     return state;
   }
@@ -2687,10 +2785,10 @@ export function createArtifactSdk(
   function commitInlineEdit() {
     const stopped = stopInlineEdit();
     if (!stopped) return;
-    const { el, before, html, tag, index, originalTag } = stopped;
+    const { el, before, tag, index, originalTag } = stopped;
     const outer = el.tagName.toLowerCase() !== originalTag;
-    const after = outer ? outerMarkup(el) : el.innerHTML;
-    if (!outer && after === html) return;
+    const after = outer ? outerMarkup(el, stopped.pendingMarkup) : stopped.pendingMarkup;
+    if (!outer && after === stopped.markup) return;
     pendingEdit = stopped;
     postArtifactMessage("lavish:textEdit", {
       tag,
@@ -2717,10 +2815,11 @@ export function createArtifactSdk(
     if (saved && typeof state.el.replaceWith === "function") state.el.replaceWith(saved);
   }
 
-  function outerMarkup(el) {
-    if (typeof el.outerHTML === "string") return el.outerHTML;
+  // The outer form is built from the inner one, so a converted block carries its atoms as markers
+  // exactly as an inner edit does.
+  function outerMarkup(el, inner) {
     const tag = el.tagName.toLowerCase();
-    return "<" + tag + ">" + el.innerHTML + "</" + tag + ">";
+    return "<" + tag + ">" + (inner === undefined ? el.innerHTML : inner) + "</" + tag + ">";
   }
 
   function showAnnotationCard(target, options = {}) {

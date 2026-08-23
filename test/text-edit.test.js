@@ -55,13 +55,63 @@ test("an edit against text the file no longer holds is refused", () => {
   assert.equal(result.html, undefined);
 });
 
-test("an element holding markup the reviewer cannot write is refused rather than flattened", () => {
-  const withMarkup = '<p>a goal and a <span class="badge">promise</span></p>';
-  const result = applyTextEdit(withMarkup, {
-    tag: "p",
+const withAtom = '<li><span class="what">profile</span><span>Every field of a collection.</span></li>';
+
+test("a block holding the author's own markup is editable, and that markup survives untouched", () => {
+  const result = applyTextEdit(withAtom, {
+    tag: "li",
     index: 0,
-    before: "a goal and a promise",
-    after: "just a goal",
+    before: "profileEvery field of a collection.",
+    // The browser froze both spans and sent them back as markers, with the text around them edited.
+    after: '<span data-lavish-atom="0"></span><span data-lavish-atom="1"></span> across every database',
+  });
+
+  assert.equal(result.error, undefined);
+  assert.equal(
+    result.html,
+    '<li><span class="what">profile</span><span>Every field of a collection.</span> across every database</li>',
+    "both atoms come back as their own bytes, class and all",
+  );
+});
+
+test("an atom the reviewer deleted stays deleted", () => {
+  const result = applyTextEdit(withAtom, {
+    tag: "li",
+    index: 0,
+    before: "profileEvery field of a collection.",
+    after: '<span data-lavish-atom="1"></span>',
+  });
+
+  assert.equal(result.html, "<li><span>Every field of a collection.</span></li>");
+});
+
+test("an atom the file does not have is refused, and one cannot be forged", () => {
+  const invented = applyTextEdit(withAtom, {
+    tag: "li",
+    index: 0,
+    before: "profileEvery field of a collection.",
+    after: '<span data-lavish-atom="7"></span>',
+  });
+  assert.equal(invented.error, "bad_atom");
+
+  // The sentinel the marker becomes is stripped from anything the reviewer typed, so writing it out
+  // by hand is just text that disappears rather than a way to reach into the file.
+  const forged = applyTextEdit(withAtom, {
+    tag: "li",
+    index: 0,
+    before: "profileEvery field of a collection.",
+    after: "\uE0000\uE001 typed by hand",
+  });
+  assert.equal(forged.html, "<li>0 typed by hand</li>");
+});
+
+test("a container of blocks is not editable, so the block inside it stays the target", () => {
+  const container = "<div><h2>Goal</h2><p>What the tool is for.</p></div>";
+  const result = applyTextEdit(container, {
+    tag: "div",
+    index: 0,
+    before: "GoalWhat the tool is for.",
+    after: "everything at once",
   });
 
   assert.equal(result.error, "not_text_only");

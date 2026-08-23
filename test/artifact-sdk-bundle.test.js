@@ -656,7 +656,7 @@ test("clicking inside a list edits the whole list, not the item", () => {
   assert.equal(item.getAttribute("contenteditable"), null, "the item is not edited on its own");
 });
 
-test("a paragraph carrying a link is editable, and a styled one is not", () => {
+test("a paragraph carrying a link is editable, and clicking the link edits the paragraph", () => {
   const sdk = bootSdk();
   const linked = appendTo(sdk.body, createElement("p"));
   const link = appendTo(linked, markupChild("a", "data stack anonymization RFC"));
@@ -665,64 +665,62 @@ test("a paragraph carrying a link is editable, and a styled one is not", () => {
     "Every question has started the same way: the data stack anonymization RFC named sixteen fields.";
   linked.childNodes = [{ nodeType: 3, textContent: "Every question " }, link, { nodeType: 3, textContent: " named" }];
 
-  sdk.edit(linked);
-  assert.equal(linked.getAttribute("contenteditable"), "true");
-
-  // Clicking the link itself edits the paragraph around it, not the link on its own.
-  sdk.sendChromeMessage({ type: "lavish:setEditMode", enabled: false });
-  linked.removeAttribute("contenteditable");
   sdk.edit(link);
+
   assert.equal(linked.getAttribute("contenteditable"), "true");
-  assert.equal(link.getAttribute("contenteditable"), null);
-
-  const styled = appendTo(sdk.body, createElement("p"));
-  const badge = markupChild("strong", "promise");
-  badge.setAttribute("class", "badge");
-  styled.textContent = "a goal and a promise";
-  styled.childNodes = [{ nodeType: 3, textContent: "a goal and a " }, badge];
-
-  sdk.edit(styled);
-  assert.equal(styled.getAttribute("contenteditable"), null, "an author's class is not the reviewer's to rewrite");
+  assert.equal(link.getAttribute("contenteditable"), null, "a link is part of a block, not one");
+  assert.equal(link.getAttribute("data-lavish-atom"), null, "and it is the reviewer's to rewrite");
 });
 
-test("the caret lands where the click did, not around the whole block", () => {
+test("the author's own markup is frozen while the block around it is edited", () => {
   const sdk = bootSdk();
-  const paragraph = editableParagraph(sdk, "The goal of the tool");
-  paragraph.contains = (node) => node === sdk.body;
+  const item = appendTo(sdk.body, createElement("li"));
+  const label = appendTo(item, markupChild("span", "profile"));
+  label.setAttribute("class", "what");
+  const rest = appendTo(item, markupChild("span", "Every field of a collection."));
+  item.textContent = "profileEvery field of a collection.";
+  item.childNodes = [label, rest];
 
-  sdk.edit(paragraph, { clientX: 310, clientY: 96 });
+  sdk.edit(label);
 
-  const range = sdk.selection.ranges.at(-1);
-  assert.equal(range.kind, "from-point", "the whole block is never selected on entry");
-  assert.deepEqual([range.x, range.y], [310, 96]);
+  assert.equal(item.getAttribute("contenteditable"), "true", "the block opens");
+  assert.equal(label.getAttribute("contenteditable"), "false", "the label does not");
+  assert.deepEqual(
+    [label.getAttribute("data-lavish-atom"), rest.getAttribute("data-lavish-atom")],
+    ["0", "1"],
+    "numbered in document order, the same walk the file gets",
+  );
+
+  item.listeners
+    .find((entry) => entry.type === "keydown")
+    .handler({ key: "Enter", shiftKey: false, metaKey: true, preventDefault() {} });
+
+  assert.equal(label.getAttribute("contenteditable"), null, "and thawed when the edit ends");
+  assert.equal(label.getAttribute("data-lavish-atom"), null);
 });
 
-test("a caret with nothing to aim at goes to the end of the block", () => {
+test("a deleted atom keeps the numbers of the ones that remain", () => {
   const sdk = bootSdk();
-  const paragraph = editableParagraph(sdk, "The goal of the tool");
-  // The point landed outside the block, which is what a caretRangeFromPoint on a gap answers.
-  paragraph.contains = () => false;
+  const item = appendTo(sdk.body, createElement("li"));
+  const label = appendTo(item, markupChild("span", "profile"));
+  label.setAttribute("class", "what");
+  const rest = appendTo(item, markupChild("span", "Every field of a collection."));
+  item.textContent = "profileEvery field of a collection.";
+  item.childNodes = [label, rest];
 
-  sdk.edit(paragraph);
+  sdk.edit(label);
+  // The reviewer deleted the label, which in the DOM is the atom simply going away.
+  label.remove();
+  item.childNodes = [rest];
+  item.innerHTML = '<span data-lavish-atom="1">Every field of a collection.</span>';
+  item.listeners
+    .find((entry) => entry.type === "keydown")
+    .handler({ key: "Enter", shiftKey: false, metaKey: true, preventDefault() {} });
 
-  assert.equal(sdk.selection.ranges.at(-1).kind, "node-contents");
-});
-
-test("clicking a bold run edits the paragraph it belongs to", () => {
-  const sdk = bootSdk();
-  const paragraph = appendTo(sdk.body, createElement("p"));
-  const bold = appendTo(paragraph, markupChild("strong", "scan a source, read the real values"));
-  paragraph.textContent = "The data profiler exists to make that loop repeatable: scan a source. Not an anonymizer.";
-  paragraph.childNodes = [
-    { nodeType: 3, textContent: "The data profiler exists to make that loop repeatable: " },
-    bold,
-    { nodeType: 3, textContent: " Not an anonymizer." },
-  ];
-
-  sdk.edit(bold);
-
-  assert.equal(paragraph.getAttribute("contenteditable"), "true");
-  assert.equal(bold.getAttribute("contenteditable"), null, "a bold run is part of a block, not one");
+  const message = sdk.posted.at(-1);
+  assert.equal(message.type, "lavish:textEdit");
+  assert.match(message.after, /data-lavish-atom="1"/, "the survivor keeps the number it started with");
+  assert.doesNotMatch(message.after, /data-lavish-atom="0"/);
 });
 
 test("an element holding markup is refused rather than edited", () => {
