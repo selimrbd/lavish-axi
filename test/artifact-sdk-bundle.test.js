@@ -121,6 +121,7 @@ function cell(tag, text) {
 
 function bootSdk() {
   const posted = [];
+  const execCommands = [];
   const documentListeners = [];
   // Deferred work the SDK schedules, run only when a test asks for it: the draft-anchor settle
   // re-query is a real timer, and asserting on it means running it rather than assuming it.
@@ -173,6 +174,10 @@ function bootSdk() {
       getElementById: () => null,
       querySelector: (selector) => documentQuery(selector),
       querySelectorAll: () => [],
+      execCommand: (command, showUi, value) => {
+        execCommands.push([command, value]);
+        return command !== "insertLineBreak";
+      },
       getSelection: () => null,
       createRange: () => ({ selectNodeContents() {} }),
       getElementsByTagName: (tag) => {
@@ -209,6 +214,7 @@ function bootSdk() {
 
   return {
     posted,
+    execCommands,
     body,
     api: sandbox.window.lavish,
     rawClick(target) {
@@ -508,6 +514,45 @@ test("clicking an element opens a card while annotate is armed", () => {
   assert.equal(sdk.cards().length, 1, "annotate is the mode a session opens in");
 });
 
+test("enter writes a line inside the block, and only cmd+enter ends the edit", () => {
+  const sdk = bootSdk();
+  const paragraph = editableParagraph(sdk, "Profile a source");
+
+  sdk.edit(paragraph);
+  const keydown = paragraph.listeners.find((entry) => entry.type === "keydown");
+  keydown.handler({ key: "Enter", shiftKey: false, preventDefault() {} });
+
+  assert.deepEqual(sdk.execCommands, [
+    ["insertLineBreak", undefined],
+    // insertLineBreak is not everywhere; a <br> is the fallback, and the tag an edit may write.
+    ["insertHTML", "<br>"],
+  ]);
+  assert.equal(paragraph.getAttribute("contenteditable"), "true", "the block keeps the caret");
+  assert.ok(!sdk.posted.some((message) => message.type === "lavish:textEdit"));
+
+  paragraph.innerHTML = "Profile a source<br>Review each field";
+  keydown.handler({ key: "Enter", shiftKey: false, metaKey: true, preventDefault() {} });
+
+  assert.equal(sdk.posted.at(-1).after, "Profile a source<br>Review each field");
+  assert.equal(paragraph.getAttribute("contenteditable"), null, "cmd+enter ends it");
+});
+
+test("enter in a list is left to the browser, which makes the next item", () => {
+  const sdk = bootSdk();
+  const paragraph = editableParagraph(sdk, "Profile a source");
+
+  sdk.edit(paragraph);
+  sdk.tool("ul").onclick();
+  const list = sdk.body.children.at(-1);
+  let prevented = false;
+  list.listeners
+    .find((entry) => entry.type === "keydown")
+    .handler({ key: "Enter", shiftKey: false, preventDefault: () => (prevented = true) });
+
+  assert.equal(prevented, false);
+  assert.deepEqual(sdk.execCommands, [], "no line break is forced into a list");
+});
+
 test("escape dismisses an open annotation card", () => {
   const sdk = bootSdk();
   sdk.click(editableParagraph(sdk, "The goal of the tool"));
@@ -619,7 +664,7 @@ test("a saved edit is re-rendered from what the file now holds", () => {
   paragraph.innerHTML = 'The <span class="x">goal</span> of the tool';
   paragraph.listeners
     .find((entry) => entry.type === "keydown")
-    .handler({ key: "Enter", shiftKey: false, preventDefault() {} });
+    .handler({ key: "Enter", shiftKey: false, metaKey: true, preventDefault() {} });
   sdk.sendChromeMessage({ type: "lavish:textEditResult", ok: true, markup: "The goal of the tool" });
 
   assert.equal(paragraph.innerHTML, "The goal of the tool", "the stripped span does not linger on screen");
@@ -632,7 +677,7 @@ test("committing an in-place edit sends the element's position and both texts", 
   sdk.edit(paragraph);
   paragraph.innerHTML = "What the tool is for";
   const keydown = paragraph.listeners.find((entry) => entry.type === "keydown");
-  keydown.handler({ key: "Enter", shiftKey: false, preventDefault() {} });
+  keydown.handler({ key: "Enter", shiftKey: false, metaKey: true, preventDefault() {} });
 
   const message = sdk.posted.at(-1);
   assert.equal(message.type, "lavish:textEdit");
@@ -665,7 +710,7 @@ test("a refused edit puts the old text back", () => {
   paragraph.innerHTML = "written while the file changed";
   paragraph.listeners
     .find((entry) => entry.type === "keydown")
-    .handler({ key: "Enter", shiftKey: false, preventDefault() {} });
+    .handler({ key: "Enter", shiftKey: false, metaKey: true, preventDefault() {} });
   sdk.sendChromeMessage({ type: "lavish:textEditResult", ok: false, error: "stale" });
 
   assert.equal(paragraph.innerHTML, "The goal of the tool");
@@ -678,7 +723,7 @@ test("an unchanged edit is not sent", () => {
   sdk.edit(paragraph);
   paragraph.listeners
     .find((entry) => entry.type === "keydown")
-    .handler({ key: "Enter", shiftKey: false, preventDefault() {} });
+    .handler({ key: "Enter", shiftKey: false, metaKey: true, preventDefault() {} });
 
   assert.ok(!sdk.posted.some((message) => message.type === "lavish:textEdit"));
 });

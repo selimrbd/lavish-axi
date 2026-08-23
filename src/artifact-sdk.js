@@ -2368,7 +2368,7 @@ export function createArtifactSdk(
 
     const hint = document.createElement("span");
     hint.className = "lavish-edit-hint";
-    hint.textContent = "\u2318\u21a9 save \u00b7 esc cancel";
+    hint.textContent = "\u21a9 new line \u00b7 \u2318\u21a9 save \u00b7 esc cancel";
     bar.appendChild(hint);
 
     root.appendChild(bar);
@@ -2402,10 +2402,11 @@ export function createArtifactSdk(
     focusEdited();
   }
 
-  // execCommand is deprecated and still the only cross-browser way to wrap a selection from a
-  // contenteditable; nothing else here depends on it.
+  // execCommand is deprecated and still the only cross-browser way to act on a selection inside a
+  // contenteditable; nothing else here depends on it. It answers whether it did anything, which is
+  // what lets a command fall back to another.
   function execEditCommand(command, value) {
-    if (typeof document.execCommand === "function") document.execCommand(command, false, value);
+    return typeof document.execCommand === "function" ? document.execCommand(command, false, value) : false;
   }
 
   function promptForLink(bar) {
@@ -2537,12 +2538,20 @@ export function createArtifactSdk(
     return state;
   }
 
-  // Enter commits a paragraph, which is what a typo fix wants; inside a list it has to make the
-  // next bullet, so there the commit is Cmd/Ctrl+Enter, which works in both.
+  // Enter writes a line, Cmd/Ctrl+Enter is what ends the edit. Keeping Enter inside the block is
+  // what makes the toolbar usable: type the lines, then turn them into bullets.
   function onInlineEditKeydown(event) {
-    if (event.key === "Enter" && !event.shiftKey && (event.metaKey || event.ctrlKey || !isListTag(currentEditTag()))) {
+    if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
       event.preventDefault();
       commitInlineEdit();
+      return;
+    }
+    if (event.key === "Enter" && !event.shiftKey && !isListTag(currentEditTag())) {
+      // A block that is not a list has no next item to make, and what a browser does with Enter in
+      // a contenteditable block is its own business: Chrome splits it with a <div>, which is not a
+      // tag an edit may write, so the break is inserted explicitly as one that is.
+      event.preventDefault();
+      if (!execEditCommand("insertLineBreak")) execEditCommand("insertHTML", "<br>");
       return;
     }
     if (event.key === "Escape") {
