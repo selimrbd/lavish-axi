@@ -39,6 +39,9 @@ function createElement(tag) {
     getAttribute(name) {
       return attributes.has(name) ? attributes.get(name) : null;
     },
+    removeAttribute(name) {
+      attributes.delete(name);
+    },
     matches(selectorList) {
       return String(selectorList)
         .split(",")
@@ -71,8 +74,11 @@ function createElement(tag) {
       if (!queried.has(selector)) queried.set(selector, createElement(selector.replace(/^[.#]/, "")));
       return queried.get(selector);
     },
-    querySelectorAll() {
-      return [];
+    // Cards and the action menu are direct children of the shadow root, and the SDK removes them
+    // by class, so a class match over the children is all the stub owes it.
+    querySelectorAll(selector) {
+      const wanted = String(selector).replace(/^\./, "");
+      return element.children.filter((child) => child.className === wanted);
     },
     getBoundingClientRect() {
       return { left: 10, top: 10, right: 110, bottom: 40, width: 100, height: 30 };
@@ -159,6 +165,19 @@ function bootSdk() {
       querySelector: (selector) => documentQuery(selector),
       querySelectorAll: () => [],
       getSelection: () => null,
+      createRange: () => ({ selectNodeContents() {} }),
+      getElementsByTagName: (tag) => {
+        const wanted = String(tag).toUpperCase();
+        const found = [];
+        const visit = (node) => {
+          for (const child of node.children || []) {
+            if (child.tagName === wanted) found.push(child);
+            visit(child);
+          }
+        };
+        visit(documentElement);
+        return found;
+      },
     },
   };
   const windowListeners = [];
@@ -183,10 +202,32 @@ function bootSdk() {
     posted,
     body,
     api: sandbox.window.lavish,
-    click(target) {
+    rawClick(target) {
       const listener = documentListeners.find((entry) => entry.type === "click");
       assert.ok(listener, "the SDK registers a document click listener");
       listener.handler({ target, preventDefault() {}, stopPropagation() {} });
+    },
+    menu() {
+      return documentElement.children
+        .flatMap((child) => child.shadowRoot?.children || [])
+        .find((child) => child.className === "lavish-action-menu");
+    },
+    menuButton(label) {
+      const menu = this.menu();
+      assert.ok(menu, "clicking an element opens the action menu");
+      const button = menu.children.find((child) => child.textContent === label);
+      assert.ok(button, `the action menu offers "${label}"`);
+      return button;
+    },
+    // Clicking an element offers annotate or edit; the tests that assert on the card take the
+    // annotate branch, which is what a click used to do on its own.
+    click(target) {
+      this.rawClick(target);
+      this.menuButton("Annotate").onclick();
+    },
+    edit(target) {
+      this.rawClick(target);
+      this.menuButton("Edit text").onclick();
     },
     setDocumentQuery(query) {
       documentQuery = query;
@@ -420,10 +461,111 @@ test("the served SDK bundle drops a late restore once the user has opened a card
   late = appendTo(sdk.body, cell("h1", "Headline"));
   sdk.runTimers();
 
+  // Cancelling really removes the card, so the restore is proven by nothing coming back rather
+  // than by what a leftover card holds.
   assert.equal(sdk.cards().length, cardsAfterCancel, "the cancelled card is not replaced by a restored one");
-  assert.notEqual(sdk.card().querySelector("textarea").value, "needs a shorter headline");
+  assert.equal(cardsAfterCancel, 0, "cancelling closes the card");
   assert.equal(
     sdk.posted.some((message) => message.type === "lavish:reviewDraftUnrestorable"),
     false,
   );
+});
+
+// --- the action menu, and editing text in place -------------------------------------------------
+
+function editableParagraph(sdk, text) {
+  const paragraph = appendTo(sdk.body, createElement("p"));
+  paragraph.textContent = text;
+  paragraph.childNodes = [{ nodeType: 3, textContent: text }];
+  return paragraph;
+}
+
+test("clicking an element offers annotate and edit rather than opening a card", () => {
+  const sdk = bootSdk();
+  sdk.rawClick(editableParagraph(sdk, "The goal of the tool"));
+
+  assert.equal(sdk.cards().length, 0, "no annotation card until annotate is chosen");
+  assert.deepEqual(
+    sdk.menu().children.map((child) => child.textContent),
+    ["Annotate", "Edit text"],
+  );
+  assert.equal(sdk.menuButton("Edit text").disabled, false);
+});
+
+test("edit is offered only for an element holding plain text", () => {
+  const sdk = bootSdk();
+  const wrapper = appendTo(sdk.body, createElement("div"));
+  wrapper.textContent = "a heading and a paragraph";
+  wrapper.childNodes = [createElement("h2"), createElement("p")];
+
+  sdk.rawClick(wrapper);
+  assert.equal(sdk.menuButton("Edit text").disabled, true);
+});
+
+test("choosing edit makes the element editable in place", () => {
+  const sdk = bootSdk();
+  const paragraph = editableParagraph(sdk, "The goal of the tool");
+
+  sdk.edit(paragraph);
+
+  assert.equal(paragraph.getAttribute("contenteditable"), "plaintext-only");
+  assert.equal(paragraph.getAttribute("data-lavish-editing"), "true");
+  assert.equal(sdk.menu(), undefined, "the menu closes once editing starts");
+});
+
+test("committing an in-place edit sends the element's position and both texts", () => {
+  const sdk = bootSdk();
+  const paragraph = editableParagraph(sdk, "The goal of the tool");
+
+  sdk.edit(paragraph);
+  paragraph.textContent = "What the tool is for";
+  const keydown = paragraph.listeners.find((entry) => entry.type === "keydown");
+  keydown.handler({ key: "Enter", shiftKey: false, preventDefault() {} });
+
+  const message = sdk.posted.at(-1);
+  assert.equal(message.type, "lavish:textEdit");
+  assert.equal(message.tag, "p");
+  assert.equal(message.index, 0);
+  assert.equal(message.before, "The goal of the tool");
+  assert.equal(message.after, "What the tool is for");
+  assert.equal(paragraph.getAttribute("contenteditable"), null, "editing ends on commit");
+});
+
+test("escape leaves the text as the file has it", () => {
+  const sdk = bootSdk();
+  const paragraph = editableParagraph(sdk, "The goal of the tool");
+
+  sdk.edit(paragraph);
+  paragraph.textContent = "half-typed replacement";
+  const keydown = paragraph.listeners.find((entry) => entry.type === "keydown");
+  keydown.handler({ key: "Escape", preventDefault() {} });
+
+  assert.equal(paragraph.textContent, "The goal of the tool");
+  assert.ok(!sdk.posted.some((message) => message.type === "lavish:textEdit"), "a cancelled edit is never sent");
+});
+
+test("a refused edit puts the old text back", () => {
+  const sdk = bootSdk();
+  const paragraph = editableParagraph(sdk, "The goal of the tool");
+
+  sdk.edit(paragraph);
+  paragraph.textContent = "written while the file changed";
+  paragraph.listeners
+    .find((entry) => entry.type === "keydown")
+    .handler({ key: "Enter", shiftKey: false, preventDefault() {} });
+  sdk.sendChromeMessage({ type: "lavish:textEditResult", ok: false, error: "stale" });
+
+  assert.equal(paragraph.textContent, "The goal of the tool");
+});
+
+test("an unchanged edit is not sent", () => {
+  const sdk = bootSdk();
+  const paragraph = editableParagraph(sdk, "The goal of the tool");
+
+  sdk.edit(paragraph);
+  paragraph.listeners
+    .find((entry) => entry.type === "keydown")
+    .handler({ key: "Enter", shiftKey: false, preventDefault() {} });
+
+  assert.ok(!sdk.posted.some((message) => message.type === "lavish:textEdit"));
 });

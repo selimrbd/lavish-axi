@@ -1847,6 +1847,26 @@ function exportWarningText(unresolvedCount, noticeCount) {
   return noticeText(noticeCount);
 }
 
+// The reviewer edited an element's text in the artifact. The server owns the file, so it decides
+// whether the edit still applies; the artifact is told either way so it can keep or undo the change.
+async function saveTextEdit(msg) {
+  try {
+    const response = await fetch("/api/" + key + "/text-edit", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ tag: msg.tag, index: msg.index, before: msg.before, after: msg.after }),
+    });
+    const data = await response.json().catch(() => ({}));
+    postToFrame({
+      type: "lavish:textEditResult",
+      ok: response.ok,
+      error: data.error || (response.ok ? "" : "save failed"),
+    });
+  } catch {
+    postToFrame({ type: "lavish:textEditResult", ok: false, error: "request failed" });
+  }
+}
+
 async function exportArtifact() {
   // The bundle inlines local assets server-side, so it can take a moment - keep the menu open
   // and narrate progress in place instead of closing it and leaving the user with no feedback.
@@ -2770,6 +2790,7 @@ window.addEventListener("message", (event) => {
     // Queued from inside the artifact, where the closed dock is the only sign it landed.
     pulseSheetDock();
   }
+  if (msg.type === "lavish:textEdit") saveTextEdit(msg);
   if (msg.type === "lavish:snapshot") {
     const snapshotAction = snapshotRequests.shift() || "submit";
     if (snapshotAction === "copy") {
