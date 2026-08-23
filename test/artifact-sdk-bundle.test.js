@@ -553,6 +553,20 @@ test("enter in a list is left to the browser, which makes the next item", () => 
   assert.deepEqual(sdk.execCommands, [], "no line break is forced into a list");
 });
 
+// Send to Agent does not post anything on its own: it asks the artifact for a DOM snapshot and
+// submits when that answer arrives. An artifact that stops answering makes Send do nothing at all,
+// with no error anywhere, so the answer is asserted here.
+test("the artifact answers a snapshot request, which is what lets Send to Agent submit", () => {
+  const sdk = bootSdk();
+  editableParagraph(sdk, "The goal of the tool");
+
+  sdk.sendChromeMessage({ type: "lavish:requestSnapshot" });
+
+  const answer = sdk.posted.filter((message) => message.type === "lavish:snapshot").at(-1);
+  assert.ok(answer, "the chrome waits for this message forever");
+  assert.equal(typeof answer.snapshot, "string");
+});
+
 test("escape dismisses an open annotation card", () => {
   const sdk = bootSdk();
   sdk.click(editableParagraph(sdk, "The goal of the tool"));

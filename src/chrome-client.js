@@ -966,9 +966,25 @@ function postToFrame(message) {
   if (frame.contentWindow) frame.contentWindow.postMessage(message, "*");
 }
 
+// Send to Agent posts nothing on its own: it asks the artifact for a DOM snapshot and submits when
+// the answer arrives. The artifact can go quiet - a stale load token has the chrome ignore
+// everything it says, and a reloading iframe answers nothing at all - and a Send that waits for it
+// forever reads as a dead button. After a moment the batch goes without the snapshot, because the
+// reviewer's words are the part that has to arrive.
+const SNAPSHOT_ANSWER_TIMEOUT_MS = 1200;
+
 function requestSnapshot(action) {
-  snapshotRequests.push(action);
+  /** @type {{ action: string, timer: ReturnType<typeof setTimeout> | undefined }} */
+  const request = { action, timer: undefined };
+  snapshotRequests.push(request);
   postToFrame({ type: "lavish:requestSnapshot" });
+  if (action !== "submit") return;
+  request.timer = setTimeout(() => {
+    if (snapshotRequests[0] !== request) return;
+    snapshotRequests.shift();
+    pendingSnapshot = "";
+    submitQueued().catch(() => {});
+  }, SNAPSHOT_ANSWER_TIMEOUT_MS);
 }
 
 function createChatAttachmentsController() {
@@ -2831,7 +2847,15 @@ window.addEventListener("message", (event) => {
   }
   if (msg.type === "lavish:textEdit") saveTextEdit(msg);
   if (msg.type === "lavish:snapshot") {
-    const snapshotAction = snapshotRequests.shift() || "submit";
+    // An answer nobody is waiting for is late, not a new instruction: the batch it belonged to has
+    // already gone without it, and submitting again would send it twice.
+    const request = snapshotRequests.shift();
+    if (!request) {
+      pendingSnapshot = msg.snapshot || "";
+      return;
+    }
+    clearTimeout(request.timer);
+    const snapshotAction = request.action;
     if (snapshotAction === "copy") {
       copyText(msg.snapshot || "");
     } else {

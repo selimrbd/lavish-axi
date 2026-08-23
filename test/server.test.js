@@ -971,16 +971,6 @@ test("overflow menu offers publishing an ht-ml.app link via a share dialog", asy
   assert.match(js, /shareUpdateKeyInput\.value = data\.update_key/);
 });
 
-test("copy DOM snapshot requests a fresh snapshot and copies it to the clipboard", async () => {
-  const js = await chromeClientSource();
-
-  assert.match(js, /const snapshotRequests = \[\]/);
-  assert.match(js, /requestSnapshot\("copy"\)/);
-  assert.match(js, /const snapshotAction = snapshotRequests\.shift\(\) \|\| "submit"/);
-  assert.match(js, /if \(snapshotAction === "copy"\)/);
-  assert.match(js, /copyText\(msg\.snapshot \|\| ""\)/);
-});
-
 test("clipboard copy falls back when navigator clipboard rejects", async () => {
   const js = await chromeClientSource();
 

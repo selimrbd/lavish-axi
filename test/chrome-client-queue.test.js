@@ -387,6 +387,7 @@ async function createChromeHarness({
   return {
     element,
     frame,
+    navigator: context.navigator,
     postedToFrame,
     postedToWhiteboard,
     createInlineWhiteboard() {
@@ -1861,6 +1862,8 @@ test("a stale queued layout prompt remains available for user re-decision", asyn
   row.children[0].checked = true;
   row.children[0].dispatch("change");
   await chrome.element("warningsQueueButton").onclick();
+  // Queueing a fix only queues it; sending is the reviewer's gesture, and the snapshot answers it.
+  chrome.element("send").click();
   chrome.sendFrameMessage({ type: "lavish:snapshot", snapshot: "" });
   await flushPromises();
 
@@ -3755,6 +3758,71 @@ test("chrome client sends queued prompts while the agent is working", async () =
     ["Follow up"],
   );
   assert.equal(chrome.queued().length, 0);
+});
+
+test("copy DOM snapshot asks the artifact and copies the answer, without submitting anything", async () => {
+  const posts = [];
+  const copied = [];
+  const chrome = await createChromeHarness({
+    fetchImpl: async (url, init = {}) => {
+      if (String(url).endsWith("/prompts")) posts.push(init.body);
+      return { ok: true, json: async () => ({}) };
+    },
+  });
+  chrome.navigator.clipboard = { writeText: async (text) => copied.push(text) };
+
+  chrome.element("copySnapshot").click();
+  chrome.sendFrameMessage({ type: "lavish:snapshot", snapshot: "uid=1 body" });
+  await flushPromises();
+
+  assert.deepEqual(copied, ["uid=1 body"]);
+  assert.equal(posts.length, 0, "copying is not sending");
+});
+
+test("send delivers even when the artifact never answers the snapshot request", async () => {
+  const posts = [];
+  const chrome = await createChromeHarness({
+    fetchImpl: async (url, init) => {
+      if (String(url).endsWith("/prompts")) posts.push(JSON.parse(init.body));
+      return { ok: true, json: async () => ({}) };
+    },
+  });
+
+  chrome.element("chatInput").value = "the tabs do not switch";
+  chrome.element("send").click();
+  await flushPromises();
+  assert.equal(posts.length, 0, "the chrome asks the artifact first");
+
+  // The artifact says nothing: a stale load token has the chrome ignore everything it sends.
+  chrome.runTimers(1200);
+  await flushPromises();
+  await flushPromises();
+
+  assert.equal(posts.length, 1, "the words still reach the agent");
+  assert.equal(posts[0].prompts[0].prompt, "the tabs do not switch");
+  assert.equal(posts[0].domSnapshot, "", "without a snapshot rather than with a stale one");
+  assert.equal(chrome.queued().length, 0, "and the queue is cleared, not left looking unsent");
+});
+
+test("a late snapshot answer does not send the batch twice", async () => {
+  const posts = [];
+  const chrome = await createChromeHarness({
+    fetchImpl: async (url, init) => {
+      if (String(url).endsWith("/prompts")) posts.push(JSON.parse(init.body));
+      return { ok: true, json: async () => ({}) };
+    },
+  });
+
+  chrome.element("chatInput").value = "late is fine";
+  chrome.element("send").click();
+  chrome.runTimers(1200);
+  await flushPromises();
+  await flushPromises();
+  chrome.sendFrameMessage({ type: "lavish:snapshot", snapshot: "uid=1 body" });
+  await flushPromises();
+  await flushPromises();
+
+  assert.equal(posts.length, 1);
 });
 
 test("send controls stay enabled while the agent works and lock only once the session ends", async () => {
