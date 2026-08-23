@@ -14,7 +14,8 @@ import { decodeHtmlEntities } from "./mermaid-source.js";
 // nothing but editable tags, and the incoming markup is re-parsed here and stripped down to the
 // same set, so an edit can never introduce a script, a style, an image or a layout container into
 // the artifact. `scope` says which range is spliced: "inner" replaces what sits between the tags,
-// "outer" replaces the element itself, which is what turns a paragraph into a list.
+// "outer" replaces the element itself, which is what turns a paragraph into a list, and "remove"
+// takes it out of the file altogether.
 
 const VOID_ELEMENTS = new Set([
   "area",
@@ -153,7 +154,8 @@ function elementsByTag(document, tag) {
 export function applyTextEdit(html, { tag, index, before, after, scope }) {
   const name = String(tag || "").toLowerCase();
   const position = Number(index);
-  const outer = scope === "outer";
+  const remove = scope === "remove";
+  const outer = scope === "outer" || remove;
   if (!name || !Number.isInteger(position) || position < 0) return { error: "bad_target" };
   if (VOID_ELEMENTS.has(name)) return { error: "not_editable" };
   if (typeof after !== "string") return { error: "bad_text" };
@@ -165,6 +167,17 @@ export function applyTextEdit(html, { tag, index, before, after, scope }) {
   const location = element.sourceCodeLocation;
   if (!location || !location.startTag || !location.endTag) return { error: "no_source_range" };
   if (asRendered(textOf(element)) !== asRendered(before)) return { error: "stale" };
+
+  // Taking a block out takes its own line with it, indentation and line break included, so the file
+  // does not fill up with the blank lines of everything a review deleted.
+  if (remove) {
+    let start = location.startOffset;
+    let end = location.endOffset;
+    const lineStart = html.lastIndexOf("\n", start - 1) + 1;
+    if (!html.slice(lineStart, start).trim()) start = lineStart;
+    if (html[end] === "\n") end += 1;
+    return { html: html.slice(0, start) + html.slice(end), markup: "" };
+  }
 
   let markup;
   if (outer) {

@@ -180,6 +180,43 @@ test("an outer edit may only produce a list or the tag that was already there", 
   assert.equal(same.html.includes("<h1>The <em>Data</em> Profiler</h1>"), true);
 });
 
+test("removing a block takes its line with it", () => {
+  const result = applyTextEdit(page, {
+    tag: "p",
+    index: 1,
+    before: "Every question has started the same way.",
+    after: "",
+    scope: "remove",
+  });
+
+  assert.equal(result.error, undefined);
+  assert.equal(
+    result.html,
+    [
+      "<title>Data Profiler RFC</title>",
+      "<style>body{background:#fff}</style>",
+      '<div class="page">',
+      "  <h1>Data Profiler</h1>",
+      '  <p class="dek">One tool to see what a data source holds.</p>',
+      "</div>",
+    ].join("\n"),
+    "no blank line is left behind",
+  );
+});
+
+test("a removal is refused on text the file no longer holds", () => {
+  const result = applyTextEdit(page, {
+    tag: "p",
+    index: 1,
+    before: "something the reviewer never saw",
+    after: "",
+    scope: "remove",
+  });
+
+  assert.equal(result.error, "stale");
+  assert.equal(result.html, undefined);
+});
+
 test("a link keeps only a safe href", () => {
   const safe = applyTextEdit(page, {
     tag: "h1",

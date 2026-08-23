@@ -2265,7 +2265,7 @@ export function createArtifactSdk(
 
     shadow = host.attachShadow({ mode: "open" });
     const style = document.createElement("style");
-    style.textContent = `:host{all:initial;position:fixed;z-index:2147483647;left:0;top:0;color-scheme:dark;--ink-900:#0f1115;--ink-800:#11141a;--ink-700:#171a21;--ink-600:#1c212b;--steel-700:#2a2f3a;--steel-600:#303745;--steel-500:#3c4557;--steel-400:#8c96aa;--steel-300:#aeb6c6;--steel-200:#b9c0cf;--steel-100:#d8deea;--cream-50:#fffbf3;--cream-100:#f7f3ea;--cream-200:#e8e1cf;--brass-500:#f4c95d;--brass-400:#ffd877;--brass-ink:#17130a;--bg:var(--ink-900);--bg-panel:var(--ink-800);--bg-elevated:var(--ink-600);--fg:var(--cream-100);--fg-faint:var(--steel-300);--border:var(--steel-600);--accent:#f4c95d;--accent-hover:#ffd877;--font-sans:Geist,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;--font-mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--radius-md:10px;--radius-xl:14px;--shadow-floating:0 20px 70px rgba(0,0,0,.35);font-family:var(--font-sans)}*{box-sizing:border-box}:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.lavish-text-highlight{position:fixed;pointer-events:none;background:rgba(244,201,93,.28);border-radius:2px;box-shadow:0 0 0 1px rgba(244,201,93,.45)}.lavish-annotation-card{position:fixed;width:min(320px,calc(100vw - 24px));padding:12px;border-radius:var(--radius-xl);background:var(--bg-panel);color:var(--fg);border:1px solid var(--accent);box-shadow:var(--shadow-floating);font:14px/1.4 var(--font-sans)}.lavish-heading{font-weight:700;margin-bottom:6px}.lavish-annotation-card textarea{width:100%;min-height:86px;resize:vertical;border-radius:var(--radius-md);border:1px solid var(--border);background:var(--bg);color:var(--fg);padding:9px;font:inherit;font-family:var(--font-sans)}.lavish-annotation-card textarea::placeholder{color:var(--fg-faint)}.lavish-annotation-card .lavish-hint{margin-top:6px;font-size:11px;color:var(--fg-faint)}.lavish-annotation-card .lavish-hint-alert{color:#ff9d7a;font-weight:700}.lavish-annotation-card .lavish-row{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}.lavish-annotation-card button{border:0;border-radius:var(--radius-md);padding:8px 10px;font-family:var(--font-sans);font-size:13px;font-weight:700;cursor:pointer}.lavish-annotation-card button:active{opacity:.85}.lavish-annotation-card .lavish-send{background:var(--accent);color:var(--brass-ink)}.lavish-annotation-card .lavish-send:hover{background:var(--accent-hover)}.lavish-annotation-card .lavish-cancel{background:var(--steel-700);color:var(--fg)}.lavish-annotation-card.is-dropping{outline:2px dashed var(--accent);outline-offset:3px}.lavish-attachments{display:flex;flex-direction:column;gap:6px;margin-top:8px;max-height:176px;overflow-y:auto}.lavish-attachment-chip{display:flex;align-items:center;gap:8px;padding:6px;border-radius:var(--radius-md);background:var(--bg);border:1px solid var(--border)}.lavish-attachment-chip.is-error{border-color:#e0623d}.lavish-attachment-thumb{width:32px;height:32px;border-radius:6px;object-fit:cover;background:var(--ink-700);flex:0 0 auto}.lavish-attachment-thumb-empty{display:inline-block}.lavish-attachment-body{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1 1 auto}.lavish-attachment-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lavish-attachment-status{font-size:11px;color:var(--fg-faint)}.lavish-attachment-status-error{color:#ff9d7a}.lavish-attachment-retry{flex:0 0 auto;padding:4px 8px;font-size:11px;font-weight:700;border-radius:8px;background:var(--steel-700);color:var(--fg);cursor:pointer;border:0}.lavish-attachment-remove{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:22px;height:22px;padding:0!important;border-radius:50%;background:transparent;color:rgba(255,255,255,.85);cursor:pointer;border:0}.lavish-attachment-remove:hover{background:rgba(255,255,255,.14);color:#fff}.lavish-attach-row{margin-top:8px}.lavish-attach{display:inline-flex;align-items:center;gap:6px;padding:6px 9px!important;background:var(--steel-700)!important;color:var(--fg)!important;font-size:12px!important}.lavish-attach:hover{background:var(--steel-600)!important}.lavish-edit-toolbar{position:fixed;display:flex;align-items:center;gap:4px;padding:5px;border-radius:var(--radius-md);background:var(--bg-panel);border:1px solid #7dd3fc;box-shadow:var(--shadow-floating);font:13px/1.2 var(--font-sans)}.lavish-edit-toolbar button{min-width:30px;border:0;border-radius:7px;padding:5px 8px;font:inherit;font-weight:700;cursor:pointer;background:var(--steel-700);color:var(--fg)}.lavish-edit-toolbar button:hover{background:var(--steel-600)}.lavish-edit-toolbar button[aria-pressed="true"]{background:#7dd3fc;color:#0b2b39}.lavish-edit-toolbar .lavish-edit-hint{margin-left:4px;font-size:11px;color:var(--fg-faint);white-space:nowrap}.lavish-edit-toolbar .lavish-edit-url{width:190px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--fg);padding:5px 7px;font:inherit}.lavish-reveal-marker{position:fixed;pointer-events:none;border:2px solid var(--accent);border-radius:4px;box-shadow:0 0 0 4px rgba(244,201,93,.22);animation:lavish-reveal-pulse 2.4s var(--ease,ease-out) forwards}@keyframes lavish-reveal-pulse{0%{opacity:0}12%{opacity:1}70%{opacity:1}100%{opacity:0}}`;
+    style.textContent = `:host{all:initial;position:fixed;z-index:2147483647;left:0;top:0;color-scheme:dark;--ink-900:#0f1115;--ink-800:#11141a;--ink-700:#171a21;--ink-600:#1c212b;--steel-700:#2a2f3a;--steel-600:#303745;--steel-500:#3c4557;--steel-400:#8c96aa;--steel-300:#aeb6c6;--steel-200:#b9c0cf;--steel-100:#d8deea;--cream-50:#fffbf3;--cream-100:#f7f3ea;--cream-200:#e8e1cf;--brass-500:#f4c95d;--brass-400:#ffd877;--brass-ink:#17130a;--bg:var(--ink-900);--bg-panel:var(--ink-800);--bg-elevated:var(--ink-600);--fg:var(--cream-100);--fg-faint:var(--steel-300);--border:var(--steel-600);--accent:#f4c95d;--accent-hover:#ffd877;--font-sans:Geist,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;--font-mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--radius-md:10px;--radius-xl:14px;--shadow-floating:0 20px 70px rgba(0,0,0,.35);font-family:var(--font-sans)}*{box-sizing:border-box}:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.lavish-text-highlight{position:fixed;pointer-events:none;background:rgba(244,201,93,.28);border-radius:2px;box-shadow:0 0 0 1px rgba(244,201,93,.45)}.lavish-annotation-card{position:fixed;width:min(320px,calc(100vw - 24px));padding:12px;border-radius:var(--radius-xl);background:var(--bg-panel);color:var(--fg);border:1px solid var(--accent);box-shadow:var(--shadow-floating);font:14px/1.4 var(--font-sans)}.lavish-heading{font-weight:700;margin-bottom:6px}.lavish-annotation-card textarea{width:100%;min-height:86px;resize:vertical;border-radius:var(--radius-md);border:1px solid var(--border);background:var(--bg);color:var(--fg);padding:9px;font:inherit;font-family:var(--font-sans)}.lavish-annotation-card textarea::placeholder{color:var(--fg-faint)}.lavish-annotation-card .lavish-hint{margin-top:6px;font-size:11px;color:var(--fg-faint)}.lavish-annotation-card .lavish-hint-alert{color:#ff9d7a;font-weight:700}.lavish-annotation-card .lavish-row{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}.lavish-annotation-card button{border:0;border-radius:var(--radius-md);padding:8px 10px;font-family:var(--font-sans);font-size:13px;font-weight:700;cursor:pointer}.lavish-annotation-card button:active{opacity:.85}.lavish-annotation-card .lavish-send{background:var(--accent);color:var(--brass-ink)}.lavish-annotation-card .lavish-send:hover{background:var(--accent-hover)}.lavish-annotation-card .lavish-cancel{background:var(--steel-700);color:var(--fg)}.lavish-annotation-card.is-dropping{outline:2px dashed var(--accent);outline-offset:3px}.lavish-attachments{display:flex;flex-direction:column;gap:6px;margin-top:8px;max-height:176px;overflow-y:auto}.lavish-attachment-chip{display:flex;align-items:center;gap:8px;padding:6px;border-radius:var(--radius-md);background:var(--bg);border:1px solid var(--border)}.lavish-attachment-chip.is-error{border-color:#e0623d}.lavish-attachment-thumb{width:32px;height:32px;border-radius:6px;object-fit:cover;background:var(--ink-700);flex:0 0 auto}.lavish-attachment-thumb-empty{display:inline-block}.lavish-attachment-body{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1 1 auto}.lavish-attachment-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lavish-attachment-status{font-size:11px;color:var(--fg-faint)}.lavish-attachment-status-error{color:#ff9d7a}.lavish-attachment-retry{flex:0 0 auto;padding:4px 8px;font-size:11px;font-weight:700;border-radius:8px;background:var(--steel-700);color:var(--fg);cursor:pointer;border:0}.lavish-attachment-remove{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:22px;height:22px;padding:0!important;border-radius:50%;background:transparent;color:rgba(255,255,255,.85);cursor:pointer;border:0}.lavish-attachment-remove:hover{background:rgba(255,255,255,.14);color:#fff}.lavish-attach-row{margin-top:8px}.lavish-attach{display:inline-flex;align-items:center;gap:6px;padding:6px 9px!important;background:var(--steel-700)!important;color:var(--fg)!important;font-size:12px!important}.lavish-attach:hover{background:var(--steel-600)!important}.lavish-edit-toolbar{position:fixed;display:flex;align-items:center;gap:4px;padding:5px;border-radius:var(--radius-md);background:var(--bg-panel);border:1px solid #7dd3fc;box-shadow:var(--shadow-floating);font:13px/1.2 var(--font-sans)}.lavish-edit-toolbar button{min-width:30px;border:0;border-radius:7px;padding:5px 8px;font:inherit;font-weight:700;cursor:pointer;background:var(--steel-700);color:var(--fg)}.lavish-edit-toolbar button:hover{background:var(--steel-600)}.lavish-edit-toolbar button[aria-pressed="true"]{background:#7dd3fc;color:#0b2b39}.lavish-edit-toolbar button.is-danger{margin-left:auto;background:transparent;color:#ff9d7a}.lavish-edit-toolbar button.is-danger:hover{background:rgba(255,157,122,.16)}.lavish-edit-toolbar button.is-danger[data-armed="true"]{background:#e0623d;color:#fff}.lavish-edit-toolbar .lavish-edit-hint{margin-left:4px;font-size:11px;color:var(--fg-faint);white-space:nowrap}.lavish-edit-toolbar .lavish-edit-url{width:190px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--fg);padding:5px 7px;font:inherit}.lavish-reveal-marker{position:fixed;pointer-events:none;border:2px solid var(--accent);border-radius:4px;box-shadow:0 0 0 4px rgba(244,201,93,.22);animation:lavish-reveal-pulse 2.4s var(--ease,ease-out) forwards}@keyframes lavish-reveal-pulse{0%{opacity:0}12%{opacity:1}70%{opacity:1}100%{opacity:0}}`;
     shadow.appendChild(style);
     return shadow;
   }
@@ -2366,6 +2366,7 @@ export function createArtifactSdk(
     { id: "bold", label: "B", title: "Bold the selection" },
     { id: "italic", label: "I", title: "Italicise the selection" },
     { id: "link", label: "Link", title: "Link the selection" },
+    { id: "remove", label: "Remove", title: "Take this block out of the file", danger: true },
   ];
 
   function closeEditToolbar() {
@@ -2398,7 +2399,8 @@ export function createArtifactSdk(
       button.textContent = tool.label;
       button.title = tool.title;
       button.setAttribute("data-tool", tool.id);
-      button.onclick = () => runEditTool(tool.id, bar);
+      if (tool.danger) button.className = "is-danger";
+      button.onclick = () => runEditTool(tool.id, bar, button);
       bar.appendChild(button);
     }
 
@@ -2430,12 +2432,43 @@ export function createArtifactSdk(
     }
   }
 
-  function runEditTool(id, bar) {
+  function runEditTool(id, bar, button) {
     if (!inlineEdit) return;
+    if (id !== "remove") disarmRemove(bar);
     if (id === "ul" || id === "ol") convertEditedBlock(currentEditTag() === id ? unlistedTag() : id, bar);
     else if (id === "link") promptForLink(bar);
-    else execEditCommand(id);
+    else if (id === "remove") {
+      // Deleting a block on one stray click, with no undo anywhere, is not a thing a review surface
+      // should do; the button asks once and means it the second time.
+      if (button.getAttribute("data-armed") === "true") {
+        removeEditedBlock();
+        return;
+      }
+      button.setAttribute("data-armed", "true");
+      button.textContent = "Remove?";
+    } else execEditCommand(id);
     focusEdited();
+  }
+
+  function disarmRemove(bar) {
+    const button = bar.querySelector('[data-tool="remove"]');
+    if (!button || button.getAttribute("data-armed") !== "true") return;
+    button.removeAttribute("data-armed");
+    button.textContent = "Remove";
+  }
+
+  // The block goes from the page and from the file at once. A refusal puts it back where it was.
+  function removeEditedBlock() {
+    if (!inlineEdit) return;
+    const target = selector(inlineEdit.el);
+    const state = stopInlineEdit();
+    if (!state) return;
+    const { el, before, tag, index } = state;
+    state.removed = { parent: el.parentElement, next: el.nextSibling };
+    if (typeof el.remove !== "function") return;
+    el.remove();
+    pendingEdit = state;
+    postArtifactMessage("lavish:textEdit", { tag, index, before, after: "", scope: "remove", selector: target });
   }
 
   // execCommand is deprecated and still the only cross-browser way to act on a selection inside a
@@ -2624,9 +2657,15 @@ export function createArtifactSdk(
     }
   }
 
-  // Put back what the file still says: the original tag as well, when the block had been converted.
+  // Put back what the file still says: the original tag as well, when the block had been converted,
+  // and the block itself when the file refused to drop it.
   function restoreEdited(state) {
     const { el, html, originalTag } = state;
+    if (state.removed) {
+      const { parent, next } = state.removed;
+      if (parent && typeof parent.insertBefore === "function") parent.insertBefore(el, next || null);
+      return el;
+    }
     if (el.tagName.toLowerCase() === originalTag) {
       el.innerHTML = html;
       return el;

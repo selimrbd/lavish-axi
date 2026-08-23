@@ -84,6 +84,19 @@ function createElement(tag) {
       if (String(selector).startsWith(".")) return element.children.filter((child) => child.className === wanted);
       return element.children.filter((child) => child.tagName === wanted.toUpperCase());
     },
+    get nextSibling() {
+      const parent = element.parentElement;
+      if (!parent) return null;
+      const index = parent.children.indexOf(element);
+      return index >= 0 ? parent.children[index + 1] || null : null;
+    },
+    insertBefore(node, reference) {
+      const index = reference ? element.children.indexOf(reference) : -1;
+      if (index >= 0) element.children.splice(index, 0, node);
+      else element.children.push(node);
+      node.parentElement = element;
+      return node;
+    },
     replaceWith(next) {
       const parent = element.parentElement;
       if (!parent) return;
@@ -740,7 +753,7 @@ test("editing opens a toolbar of the tools the file can hold", () => {
       .toolbar()
       .children.filter((child) => child.tagName === "BUTTON")
       .map((child) => child.getAttribute("data-tool")),
-    ["ul", "ol", "bold", "italic", "link"],
+    ["ul", "ol", "bold", "italic", "link", "remove"],
   );
 
   paragraph.listeners.find((entry) => entry.type === "keydown").handler({ key: "Escape", preventDefault() {} });
@@ -770,6 +783,43 @@ test("bullets turn the block into a list, and the file is asked to replace the e
   assert.equal(message.tag, "p", "the patch travels under the identity the edit began with");
   assert.equal(message.scope, "outer");
   assert.equal(message.after, "<ul><li>Profile a source</li><li>Review each field</li></ul>");
+});
+
+test("remove asks once, then takes the block out of the page and the file", () => {
+  const sdk = bootSdk();
+  const paragraph = editableParagraph(sdk, "The goal of the tool");
+
+  sdk.edit(paragraph);
+  sdk.tool("remove").onclick();
+
+  assert.equal(sdk.tool("remove").textContent, "Remove?", "one click only arms it");
+  assert.ok(sdk.body.children.includes(paragraph));
+  assert.ok(!sdk.posted.some((message) => message.scope === "remove"));
+
+  sdk.tool("remove").onclick();
+
+  assert.equal(sdk.body.children.includes(paragraph), false);
+  const message = sdk.posted.at(-1);
+  assert.equal(message.scope, "remove");
+  assert.equal(message.tag, "p");
+  assert.equal(message.before, "The goal of the tool");
+  assert.equal(message.after, "");
+  assert.equal(sdk.toolbar(), undefined);
+});
+
+test("a refused removal puts the block back where it was", () => {
+  const sdk = bootSdk();
+  const first = editableParagraph(sdk, "The goal of the tool");
+  const second = editableParagraph(sdk, "What it is not");
+
+  sdk.edit(first);
+  sdk.tool("remove").onclick();
+  sdk.tool("remove").onclick();
+  assert.deepEqual(sdk.body.children, [second]);
+
+  sdk.sendChromeMessage({ type: "lavish:textEditResult", ok: false, error: "stale" });
+
+  assert.deepEqual(sdk.body.children, [first, second], "back in its own place, not appended");
 });
 
 test("a saved edit is re-rendered from what the file now holds", () => {
