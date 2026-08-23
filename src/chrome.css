@@ -895,6 +895,13 @@ body.lavish {
   background: #fff;
   overflow: hidden;
 }
+body.panel-collapsed .layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+body.panel-collapsed .panel,
+body.panel-collapsed .panel-scrim {
+  display: none;
+}
 .panel {
   width: var(--panel-w);
   border-left: var(--hairline-subtle);
@@ -1402,6 +1409,16 @@ body.layout-gate-active iframe#artifact {
   .frame {
     padding: 0 env(safe-area-inset-right, 0px) 0 env(safe-area-inset-left, 0px);
     background: var(--bg-bar);
+  }
+  .panel-switch {
+    display: none;
+  }
+  body.panel-collapsed .layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) calc(var(--dock-h) + env(safe-area-inset-bottom, 0px));
+  }
+  body.panel-collapsed .panel {
+    display: flex;
   }
   .panel {
     position: fixed;

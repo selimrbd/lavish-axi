@@ -4042,6 +4042,18 @@ test("a letter typed into the composer stays a letter", async () => {
   assert.equal(chrome.element("editMode")["aria-pressed"], undefined);
 });
 
+test("the conversation switch collapses and restores the panel", async () => {
+  const chrome = await createChromeHarness();
+
+  chrome.element("panelSwitch").click();
+  assert.equal(chrome.element("body").classList.contains("panel-collapsed"), true);
+  assert.equal(chrome.element("panelSwitch")["aria-pressed"], "false");
+
+  chrome.element("panelSwitch").click();
+  assert.equal(chrome.element("body").classList.contains("panel-collapsed"), false);
+  assert.equal(chrome.element("panelSwitch")["aria-pressed"], "true");
+});
+
 test("chrome client toggles annotation mode when the artifact SDK requests it via postMessage", async () => {
   const chrome = await createChromeHarness();
 

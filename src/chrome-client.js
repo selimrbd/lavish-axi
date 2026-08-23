@@ -135,6 +135,7 @@ const sendButton = /** @type {HTMLButtonElement} */ (document.getElementById("se
 const sendAndEndButton = /** @type {HTMLButtonElement} */ (document.getElementById("sendAndEnd"));
 const annotationSwitch = /** @type {HTMLButtonElement} */ (document.getElementById("annotation"));
 const editSwitch = /** @type {HTMLButtonElement} */ (document.getElementById("editMode"));
+const panelSwitch = /** @type {HTMLButtonElement} */ (document.getElementById("panelSwitch"));
 const moreWrap = /** @type {HTMLDivElement} */ (document.getElementById("moreWrap"));
 const moreButton = /** @type {HTMLButtonElement} */ (document.getElementById("moreButton"));
 const moreMenu = /** @type {HTMLDivElement} */ (document.getElementById("moreMenu"));
@@ -189,6 +190,7 @@ const artifactSrc = frame.dataset.artifactSrc || frame.getAttribute?.("data-arti
 const queued = loadQueuedPrompts();
 let annotation = true;
 let editing = false;
+let panelShown = true;
 let ended = false;
 let agentPresence = "waiting";
 let pendingSnapshot = "";
@@ -3000,8 +3002,15 @@ function toggleEditMode() {
   applyModes();
 }
 
+function togglePanel() {
+  panelShown = !panelShown;
+  document.body.classList.toggle("panel-collapsed", !panelShown);
+  panelSwitch.setAttribute("aria-pressed", String(panelShown));
+}
+
 annotationSwitch.onclick = toggleAnnotationMode;
 editSwitch.onclick = toggleEditMode;
+panelSwitch.onclick = togglePanel;
 
 sendButton.onclick = () => sendQueued(false);
 sendAndEndButton.onclick = () => sendQueued(true);

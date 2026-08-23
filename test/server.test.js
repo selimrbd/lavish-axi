@@ -682,13 +682,14 @@ test("the annotate switch exposes the mode toggle hotkey as a discoverable toolt
   assert.match(html, /id="annotation"[^>]*title="[^"]*Toggle annotate\/explore mode \(⌘I \/ Ctrl\+I\)"/);
 });
 
-test("the bar carries the edit switch beside annotate, each with its hotkey", () => {
+test("the bar carries the edit switch and the conversation switch, each with its hotkey", () => {
   const html = createChromeHtml({ key: "abc", file: "/tmp/artifact.html" });
 
   assert.match(html, /"annotateModeHotkeyKey":"a"/);
   assert.match(html, /"editModeHotkeyKey":"e"/);
   assert.match(html, /id="annotation"[^>]*title="Click an element to tell the agent about it \(a\)/);
   assert.match(html, /id="editMode"[^>]*aria-pressed="false"[^>]*title="[^"]*rewrite its text in the file \(e\)"/);
+  assert.match(html, /id="panelSwitch"[^>]*aria-pressed="true"[^>]*aria-controls="panel"/);
 });
 
 test("artifact SDK switches mode on a bare a or e, and never mid-word", () => {
@@ -703,7 +704,7 @@ test("artifact SDK switches mode on a bare a or e, and never mid-word", () => {
   assert.match(js, /if \(editMode\) beginEdit\(event\.target\);/);
 });
 
-test("chrome client arms one mode at a time", async () => {
+test("chrome client arms one mode at a time and can hide the conversation panel", async () => {
   const js = await chromeClientSource();
 
   assert.match(js, /function modeHotkeyFor\(event, activeElement = null\)/);
@@ -712,6 +713,16 @@ test("chrome client arms one mode at a time", async () => {
   assert.match(js, /if \(editing\) annotation = false;/);
   assert.match(js, /editSwitch\.onclick = toggleEditMode;/);
   assert.match(js, /if \(msg\.type === "lavish:toggleEditMode"\) toggleEditMode\(\);/);
+  assert.match(js, /document\.body\.classList\.toggle\("panel-collapsed", !panelShown\);/);
+  assert.match(js, /panelSwitch\.onclick = togglePanel;/);
+});
+
+test("chrome css gives the collapsed panel its width back and hides the switch on a phone", async () => {
+  const css = await chromeCssSource();
+
+  assert.match(css, /body\.panel-collapsed \.layout\{grid-template-columns:minmax\(0,1fr\);\}/);
+  assert.match(css, /body\.panel-collapsed \.panel,body\.panel-collapsed \.panel-scrim\{display:none;\}/);
+  assert.match(css, /\.panel-switch\{display:none;\}/);
 });
 
 test("artifact SDK lets marked feedback controls handle their own clicks", () => {
