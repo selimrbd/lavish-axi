@@ -682,6 +682,8 @@ test("the annotate switch exposes the mode toggle hotkey as a discoverable toolt
   assert.match(html, /id="annotation"[^>]*title="[^"]*Toggle annotate\/explore mode \(⌘I \/ Ctrl\+I\)"/);
 });
 
+// What the bar serves is output, so it is asserted here; how the switches are wired is behaviour,
+// asserted by driving the chrome and the artifact bundle in their own tests.
 test("the bar carries the edit switch and the conversation switch, each with its hotkey", () => {
   const html = createChromeHtml({ key: "abc", file: "/tmp/artifact.html" });
 
@@ -690,31 +692,6 @@ test("the bar carries the edit switch and the conversation switch, each with its
   assert.match(html, /id="annotation"[^>]*title="Click an element to tell the agent about it \(a\)/);
   assert.match(html, /id="editMode"[^>]*aria-pressed="false"[^>]*title="[^"]*rewrite its text in the file \(e\)"/);
   assert.match(html, /id="panelSwitch"[^>]*aria-pressed="true"[^>]*aria-controls="panel"/);
-});
-
-test("artifact SDK switches mode on a bare a or e, and never mid-word", () => {
-  const js = createSdkJs("abc");
-
-  assert.match(js, /const ANNOTATE_MODE_HOTKEY_KEY="a"/);
-  assert.match(js, /const EDIT_MODE_HOTKEY_KEY="e"/);
-  assert.match(js, /function modeHotkeyFor\(event, activeElement = null\)/);
-  assert.match(js, /input,textarea,select,\[contenteditable\]:not\(\[contenteditable='false'\]\),\[data-lavish-ui\]/);
-  assert.match(js, /postArtifactMessage\(mode === "edit" \? "lavish:toggleEditMode" : "lavish:toggleAnnotationMode"\)/);
-  assert.match(js, /if \(msg\.type === "lavish:setEditMode"\) setEditMode\(msg\.enabled\);/);
-  assert.match(js, /if \(editMode\) beginEdit\(event\.target\);/);
-});
-
-test("chrome client arms one mode at a time and can hide the conversation panel", async () => {
-  const js = await chromeClientSource();
-
-  assert.match(js, /function modeHotkeyFor\(event, activeElement = null\)/);
-  assert.match(js, /function toggleEditMode\(\)/);
-  assert.match(js, /if \(annotation\) editing = false;/);
-  assert.match(js, /if \(editing\) annotation = false;/);
-  assert.match(js, /editSwitch\.onclick = toggleEditMode;/);
-  assert.match(js, /if \(msg\.type === "lavish:toggleEditMode"\) toggleEditMode\(\);/);
-  assert.match(js, /document\.body\.classList\.toggle\("panel-collapsed", !panelShown\);/);
-  assert.match(js, /panelSwitch\.onclick = togglePanel;/);
 });
 
 test("chrome css gives the collapsed panel its width back and hides the switch on a phone", async () => {
