@@ -20,6 +20,8 @@ const retiredDraftNodes = [];
 const internalQueueKeyField = "_lavishQueueKey";
 const initialChat = Array.isArray(sessionData.initialChat) ? sessionData.initialChat : [];
 const MODE_TOGGLE_HOTKEY_KEY = String(sessionData.modeToggleHotkeyKey || "").toLowerCase();
+const ANNOTATE_MODE_HOTKEY_KEY = String(sessionData.annotateModeHotkeyKey || "").toLowerCase();
+const EDIT_MODE_HOTKEY_KEY = String(sessionData.editModeHotkeyKey || "").toLowerCase();
 const attachmentMaxBytes = Number(sessionData.attachmentMaxBytes) || 0;
 const attachmentMaxCount = Number(sessionData.attachmentMaxCount) || 4;
 // Threaded from the server's single accepted-image list, which also drives the
@@ -98,6 +100,22 @@ function isModeToggleHotkeyEvent(event) {
   return Boolean(event.metaKey || event.ctrlKey) && String(event.key || "").toLowerCase() === MODE_TOGGLE_HOTKEY_KEY;
 }
 
+// Mirrors modeHotkeyFor in artifact-sdk.js: the chrome is served as a plain script and cannot
+// import it, so both sides have to answer the same keypress the same way. A bare letter is a
+// hotkey only when nothing is being typed into.
+function modeHotkeyFor(event, activeElement = null) {
+  if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return null;
+  const key = String(event.key || "").toLowerCase();
+  if (!key) return null;
+  const mode = key === ANNOTATE_MODE_HOTKEY_KEY ? "annotate" : key === EDIT_MODE_HOTKEY_KEY ? "edit" : null;
+  if (!mode) return null;
+  const typing = "input,textarea,select,[contenteditable]:not([contenteditable='false'])";
+  for (const node of [event.target, activeElement]) {
+    if (node && typeof node.closest === "function" && node.closest(typing)) return null;
+  }
+  return mode;
+}
+
 const frame = /** @type {HTMLIFrameElement} */ (document.getElementById("artifact"));
 const panelScroll = /** @type {HTMLDivElement} */ (document.getElementById("panelScroll"));
 const annotationPills = /** @type {HTMLDivElement} */ (document.getElementById("annotationPills"));
@@ -116,6 +134,7 @@ const panelScrim = /** @type {HTMLDivElement} */ (document.getElementById("panel
 const sendButton = /** @type {HTMLButtonElement} */ (document.getElementById("send"));
 const sendAndEndButton = /** @type {HTMLButtonElement} */ (document.getElementById("sendAndEnd"));
 const annotationSwitch = /** @type {HTMLButtonElement} */ (document.getElementById("annotation"));
+const editSwitch = /** @type {HTMLButtonElement} */ (document.getElementById("editMode"));
 const moreWrap = /** @type {HTMLDivElement} */ (document.getElementById("moreWrap"));
 const moreButton = /** @type {HTMLButtonElement} */ (document.getElementById("moreButton"));
 const moreMenu = /** @type {HTMLDivElement} */ (document.getElementById("moreMenu"));
@@ -169,6 +188,7 @@ const artifactSrc = frame.dataset.artifactSrc || frame.getAttribute?.("data-arti
 
 const queued = loadQueuedPrompts();
 let annotation = true;
+let editing = false;
 let ended = false;
 let agentPresence = "waiting";
 let pendingSnapshot = "";
@@ -1791,6 +1811,7 @@ function markSessionEnded() {
   renderWarnings();
   closeWhiteboard();
   annotationSwitch.disabled = true;
+  editSwitch.disabled = true;
   moreButton.disabled = true;
   chatInput.disabled = true;
   updateSendState();
@@ -1802,6 +1823,7 @@ function markSessionEnded() {
   layoutGateFailureSticky = false;
   revealLayoutGate();
   postToFrame({ type: "lavish:setAnnotationMode", enabled: false });
+  postToFrame({ type: "lavish:setEditMode", enabled: false });
   endedOverlay.hidden = false;
 }
 
@@ -2825,6 +2847,7 @@ window.addEventListener("message", (event) => {
   if (msg.type === "lavish:sendQueuedPrompts") sendQueued();
   if (msg.type === "lavish:endSession") endSession();
   if (msg.type === "lavish:toggleAnnotationMode") toggleAnnotationMode();
+  if (msg.type === "lavish:toggleEditMode") toggleEditMode();
 });
 
 // The sandboxed artifact iframe can't reach the loopback server (opaque origin),
@@ -2954,14 +2977,31 @@ async function uploadAttachment(message, reportResult = postToFrame, signal) {
 
 loadFrame();
 
+// Annotate and edit are mutually exclusive: a click on an element either tells the agent about it
+// or rewrites its text, and arming one disarms the other. Both off is explore mode.
+function applyModes() {
+  annotationSwitch.setAttribute("aria-pressed", String(annotation));
+  editSwitch.setAttribute("aria-pressed", String(editing));
+  postToFrame({ type: "lavish:setAnnotationMode", enabled: annotation && !ended });
+  postToFrame({ type: "lavish:setEditMode", enabled: editing && !ended });
+}
+
 function toggleAnnotationMode() {
   if (ended) return;
   annotation = !annotation;
-  annotationSwitch.setAttribute("aria-pressed", String(annotation));
-  postToFrame({ type: "lavish:setAnnotationMode", enabled: annotation });
+  if (annotation) editing = false;
+  applyModes();
+}
+
+function toggleEditMode() {
+  if (ended) return;
+  editing = !editing;
+  if (editing) annotation = false;
+  applyModes();
 }
 
 annotationSwitch.onclick = toggleAnnotationMode;
+editSwitch.onclick = toggleEditMode;
 
 sendButton.onclick = () => sendQueued(false);
 sendAndEndButton.onclick = () => sendQueued(true);
@@ -3121,9 +3161,22 @@ document.addEventListener(
   },
   true,
 );
+// The bare-letter hotkeys, guarded so they never fire mid-sentence in the composer.
+document.addEventListener(
+  "keydown",
+  (event) => {
+    const mode = modeHotkeyFor(event, document.activeElement);
+    if (!mode) return;
+    event.preventDefault();
+    if (mode === "edit") toggleEditMode();
+    else toggleAnnotationMode();
+  },
+  true,
+);
 frame.addEventListener("load", () => {
   if (artifactSpokeToken !== artifactLoadToken) armArtifactAvailabilityProbe(artifactLoadToken);
   postToFrame({ type: "lavish:setAnnotationMode", enabled: annotation && !ended });
+  postToFrame({ type: "lavish:setEditMode", enabled: editing && !ended });
   // Replay the pre-reload scroll position so hot reloads don't jump the artifact to the top.
   postToFrame({ type: "lavish:restoreScroll", x: lastScroll.x, y: lastScroll.y });
   if (lastReviewState) postToFrame({ type: "lavish:restoreReviewState", state: lastReviewState });

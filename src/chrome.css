@@ -184,6 +184,18 @@ body.lavish {
   padding: 0;
   flex-shrink: 0;
 }
+.mode-switches {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.edit-switch[aria-pressed="true"] .switch-track {
+  background: var(--edit-accent, #7dd3fc);
+}
+.edit-switch[aria-pressed="true"] .switch-knob {
+  background: #0b2b39;
+}
 .annotate-switch:disabled {
   cursor: not-allowed;
   opacity: 0.55;

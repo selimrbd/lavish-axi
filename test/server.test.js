@@ -679,7 +679,39 @@ test("the annotate switch exposes the mode toggle hotkey as a discoverable toolt
   const html = createChromeHtml({ key: "abc", file: "/tmp/artifact.html" });
 
   assert.match(html, /"modeToggleHotkeyKey":"i"/);
-  assert.match(html, /id="annotation"[^>]*title="Toggle annotate\/explore mode \(⌘I \/ Ctrl\+I\)"/);
+  assert.match(html, /id="annotation"[^>]*title="[^"]*Toggle annotate\/explore mode \(⌘I \/ Ctrl\+I\)"/);
+});
+
+test("the bar carries the edit switch beside annotate, each with its hotkey", () => {
+  const html = createChromeHtml({ key: "abc", file: "/tmp/artifact.html" });
+
+  assert.match(html, /"annotateModeHotkeyKey":"a"/);
+  assert.match(html, /"editModeHotkeyKey":"e"/);
+  assert.match(html, /id="annotation"[^>]*title="Click an element to tell the agent about it \(a\)/);
+  assert.match(html, /id="editMode"[^>]*aria-pressed="false"[^>]*title="[^"]*rewrite its text in the file \(e\)"/);
+});
+
+test("artifact SDK switches mode on a bare a or e, and never mid-word", () => {
+  const js = createSdkJs("abc");
+
+  assert.match(js, /const ANNOTATE_MODE_HOTKEY_KEY="a"/);
+  assert.match(js, /const EDIT_MODE_HOTKEY_KEY="e"/);
+  assert.match(js, /function modeHotkeyFor\(event, activeElement = null\)/);
+  assert.match(js, /input,textarea,select,\[contenteditable\]:not\(\[contenteditable='false'\]\),\[data-lavish-ui\]/);
+  assert.match(js, /postArtifactMessage\(mode === "edit" \? "lavish:toggleEditMode" : "lavish:toggleAnnotationMode"\)/);
+  assert.match(js, /if \(msg\.type === "lavish:setEditMode"\) setEditMode\(msg\.enabled\);/);
+  assert.match(js, /if \(editMode\) beginEdit\(event\.target\);/);
+});
+
+test("chrome client arms one mode at a time", async () => {
+  const js = await chromeClientSource();
+
+  assert.match(js, /function modeHotkeyFor\(event, activeElement = null\)/);
+  assert.match(js, /function toggleEditMode\(\)/);
+  assert.match(js, /if \(annotation\) editing = false;/);
+  assert.match(js, /if \(editing\) annotation = false;/);
+  assert.match(js, /editSwitch\.onclick = toggleEditMode;/);
+  assert.match(js, /if \(msg\.type === "lavish:toggleEditMode"\) toggleEditMode\(\);/);
 });
 
 test("artifact SDK lets marked feedback controls handle their own clicks", () => {

@@ -207,27 +207,26 @@ function bootSdk() {
       assert.ok(listener, "the SDK registers a document click listener");
       listener.handler({ target, preventDefault() {}, stopPropagation() {} });
     },
-    menu() {
-      return documentElement.children
-        .flatMap((child) => child.shadowRoot?.children || [])
-        .find((child) => child.className === "lavish-action-menu");
+    // The armed mode decides what a click does, and the chrome is what arms it.
+    setMode(mode) {
+      this.sendChromeMessage({ type: "lavish:setAnnotationMode", enabled: mode === "annotate" });
+      this.sendChromeMessage({ type: "lavish:setEditMode", enabled: mode === "edit" });
     },
-    menuButton(label) {
-      const menu = this.menu();
-      assert.ok(menu, "clicking an element opens the action menu");
-      const button = menu.children.find((child) => child.textContent === label);
-      assert.ok(button, `the action menu offers "${label}"`);
-      return button;
-    },
-    // Clicking an element offers annotate or edit; the tests that assert on the card take the
-    // annotate branch, which is what a click used to do on its own.
     click(target) {
       this.rawClick(target);
-      this.menuButton("Annotate").onclick();
     },
     edit(target) {
+      this.setMode("edit");
       this.rawClick(target);
-      this.menuButton("Edit text").onclick();
+    },
+    modeHotkey(key, target) {
+      const listeners = documentListeners.filter((entry) => entry.type === "keydown");
+      assert.ok(listeners.length > 0, "the SDK registers a document keydown listener");
+      let prevented = false;
+      for (const listener of listeners) {
+        listener.handler({ key, target: target || body, preventDefault: () => (prevented = true) });
+      }
+      return prevented;
     },
     setDocumentQuery(query) {
       documentQuery = query;
@@ -471,7 +470,7 @@ test("the served SDK bundle drops a late restore once the user has opened a card
   );
 });
 
-// --- the action menu, and editing text in place -------------------------------------------------
+// --- the two modes, and editing text in place ---------------------------------------------------
 
 function editableParagraph(sdk, text) {
   const paragraph = appendTo(sdk.body, createElement("p"));
@@ -480,29 +479,14 @@ function editableParagraph(sdk, text) {
   return paragraph;
 }
 
-test("clicking an element offers annotate and edit rather than opening a card", () => {
+test("clicking an element opens a card while annotate is armed", () => {
   const sdk = bootSdk();
-  sdk.rawClick(editableParagraph(sdk, "The goal of the tool"));
+  sdk.click(editableParagraph(sdk, "The goal of the tool"));
 
-  assert.equal(sdk.cards().length, 0, "no annotation card until annotate is chosen");
-  assert.deepEqual(
-    sdk.menu().children.map((child) => child.textContent),
-    ["Annotate", "Edit text"],
-  );
-  assert.equal(sdk.menuButton("Edit text").disabled, false);
+  assert.equal(sdk.cards().length, 1, "annotate is the mode a session opens in");
 });
 
-test("edit is offered only for an element holding plain text", () => {
-  const sdk = bootSdk();
-  const wrapper = appendTo(sdk.body, createElement("div"));
-  wrapper.textContent = "a heading and a paragraph";
-  wrapper.childNodes = [createElement("h2"), createElement("p")];
-
-  sdk.rawClick(wrapper);
-  assert.equal(sdk.menuButton("Edit text").disabled, true);
-});
-
-test("choosing edit makes the element editable in place", () => {
+test("clicking an element edits it in place while edit is armed", () => {
   const sdk = bootSdk();
   const paragraph = editableParagraph(sdk, "The goal of the tool");
 
@@ -510,7 +494,45 @@ test("choosing edit makes the element editable in place", () => {
 
   assert.equal(paragraph.getAttribute("contenteditable"), "plaintext-only");
   assert.equal(paragraph.getAttribute("data-lavish-editing"), "true");
-  assert.equal(sdk.menu(), undefined, "the menu closes once editing starts");
+  assert.equal(sdk.cards().length, 0, "editing never opens an annotation card");
+});
+
+test("an element holding markup is refused rather than edited", () => {
+  const sdk = bootSdk();
+  const wrapper = appendTo(sdk.body, createElement("div"));
+  wrapper.textContent = "a heading and a paragraph";
+  wrapper.childNodes = [createElement("h2"), createElement("p")];
+
+  sdk.edit(wrapper);
+
+  assert.equal(wrapper.getAttribute("contenteditable"), null);
+  assert.equal(wrapper.style.outline, "2px solid #ff9d7a", "the refusal is visible on the element");
+});
+
+test("arming one mode disarms the other", () => {
+  const sdk = bootSdk();
+  const paragraph = editableParagraph(sdk, "The goal of the tool");
+
+  sdk.setMode("edit");
+  sdk.setMode("annotate");
+  sdk.rawClick(paragraph);
+
+  assert.equal(paragraph.getAttribute("contenteditable"), null, "annotate wins once it is armed");
+  assert.equal(sdk.cards().length, 1);
+});
+
+test("a bare a or e asks the chrome to switch mode, unless it is being typed", () => {
+  const sdk = bootSdk();
+
+  assert.equal(sdk.modeHotkey("e"), true);
+  assert.equal(sdk.posted.at(-1).type, "lavish:toggleEditMode");
+  assert.equal(sdk.modeHotkey("a"), true);
+  assert.equal(sdk.posted.at(-1).type, "lavish:toggleAnnotationMode");
+
+  const field = createElement("textarea");
+  const before = sdk.posted.length;
+  assert.equal(sdk.modeHotkey("e", field), false);
+  assert.equal(sdk.posted.length, before, "a letter typed into a field is just a letter");
 });
 
 test("committing an in-place edit sends the element's position and both texts", () => {
