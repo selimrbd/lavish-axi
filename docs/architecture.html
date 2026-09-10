@@ -1,0 +1,1026 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>How Lavish works</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Geist:wght@400;500;600;700;750&family=Geist+Mono:wght@400;500&display=swap");
+
+      :root {
+        --ink-900: #0f1115;
+        --ink-800: #11141a;
+        --ink-700: #171a21;
+        --ink-600: #1c212b;
+        --steel-700: #2a2f3a;
+        --steel-600: #303745;
+        --steel-500: #3c4557;
+        --steel-400: #8c96aa;
+        --steel-300: #aeb6c6;
+        --steel-200: #b9c0cf;
+        --steel-100: #d8deea;
+        --cream-100: #f7f3ea;
+        --cream-200: #e8e1cf;
+        --brass-500: #f4c95d;
+        --brass-ink: #17130a;
+        --sage-900: #172419;
+        --sage-700: #315f3a;
+        --sage-300: #8fe39e;
+        --amber-900: #25230f;
+        --amber-700: #5d4d1b;
+        --amber-300: #e3cf8f;
+        --rust-500: #f06464;
+
+        --bg: var(--ink-900);
+        --bg-panel: var(--ink-800);
+        --bg-elevated: var(--ink-600);
+        --fg: var(--cream-100);
+        --fg-muted: var(--steel-100);
+        --fg-dim: var(--steel-200);
+        --fg-faint: var(--steel-300);
+        --fg-label: var(--steel-400);
+        --border: var(--steel-600);
+        --border-subtle: var(--steel-700);
+        --accent: var(--brass-500);
+
+        --font-serif: "EB Garamond", "Iowan Old Style", Georgia, serif;
+        --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        background: var(--bg);
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: var(--font-sans);
+        font-size: 16px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+
+      .page {
+        max-width: 820px;
+        margin: 0 auto;
+        padding: 64px 24px 96px;
+      }
+
+      .eyebrow {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--fg-label);
+        margin: 0 0 20px;
+      }
+
+      h1 {
+        font-family: var(--font-serif);
+        font-style: italic;
+        font-weight: 400;
+        font-size: 52px;
+        line-height: 1.08;
+        letter-spacing: -0.01em;
+        margin: 0 0 20px;
+      }
+
+      .lede {
+        font-family: var(--font-serif);
+        font-style: italic;
+        font-size: 21px;
+        line-height: 1.45;
+        color: var(--fg-muted);
+        margin: 0 0 8px;
+        max-width: 62ch;
+      }
+
+      h2 {
+        font-family: var(--font-sans);
+        font-size: 22px;
+        font-weight: 600;
+        line-height: 1.3;
+        margin: 64px 0 4px;
+        padding-top: 28px;
+        border-top: 1px solid var(--border-subtle);
+      }
+
+      h2 .num {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--accent);
+        margin-right: 12px;
+        vertical-align: 2px;
+      }
+
+      h3 {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 36px 0 4px;
+      }
+
+      p {
+        margin: 16px 0;
+        max-width: 68ch;
+      }
+
+      .sub {
+        color: var(--fg-faint);
+        font-size: 15px;
+        margin-top: 8px;
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration-thickness: 1px;
+        text-underline-offset: 3px;
+      }
+
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.88em;
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1px 6px;
+        color: var(--cream-200);
+        white-space: nowrap;
+      }
+
+      ul,
+      ol {
+        max-width: 68ch;
+        padding-left: 22px;
+      }
+      li {
+        margin: 10px 0;
+      }
+      li::marker {
+        color: var(--fg-label);
+      }
+
+      strong {
+        font-weight: 600;
+        color: var(--fg);
+      }
+
+      .quote {
+        font-family: var(--font-serif);
+        font-style: italic;
+        font-size: 27px;
+        line-height: 1.3;
+        color: var(--fg);
+        border-left: 2px solid var(--accent);
+        padding-left: 24px;
+        margin: 36px 0;
+        max-width: 26ch;
+      }
+
+      .card {
+        background: var(--bg-panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 20px 24px;
+        margin: 28px 0;
+      }
+
+      .card p:first-child {
+        margin-top: 0;
+      }
+      .card p:last-child {
+        margin-bottom: 0;
+      }
+
+      figure {
+        margin: 32px 0;
+      }
+
+      figure svg {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      figcaption {
+        font-size: 13px;
+        color: var(--fg-label);
+        margin-top: 14px;
+        text-align: center;
+      }
+
+      .diagram-scroll {
+        overflow-x: auto;
+      }
+      .diagram-scroll > svg {
+        min-width: 620px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 28px 0;
+        font-size: 15px;
+      }
+
+      th,
+      td {
+        text-align: left;
+        vertical-align: top;
+        padding: 12px 16px 12px 0;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+
+      th {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--fg-label);
+        border-bottom-color: var(--border);
+      }
+
+      td:first-child {
+        white-space: nowrap;
+        padding-right: 28px;
+      }
+      td {
+        color: var(--fg-dim);
+      }
+      td strong {
+        color: var(--fg);
+        font-weight: 500;
+      }
+
+      .chain {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        margin: 28px 0;
+      }
+
+      .chain-step {
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 8px 14px;
+        font-size: 13px;
+        color: var(--fg-muted);
+      }
+
+      .chain-step em {
+        display: block;
+        font-style: normal;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--fg-label);
+        margin-top: 2px;
+      }
+
+      .chain-arrow {
+        color: var(--fg-label);
+        font-size: 14px;
+      }
+
+      .timeline {
+        margin: 32px 0;
+        border-left: 1px solid var(--border);
+        padding-left: 0;
+      }
+
+      .tl-row {
+        display: grid;
+        grid-template-columns: 90px 1fr;
+        gap: 20px;
+        padding: 14px 0 14px 24px;
+        position: relative;
+      }
+
+      .tl-row::before {
+        content: "";
+        position: absolute;
+        left: -4px;
+        top: 22px;
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: var(--border-strong, var(--steel-500));
+      }
+
+      .tl-row.is-user::before {
+        background: var(--amber-300);
+      }
+      .tl-row.is-agent::before {
+        background: var(--sage-300);
+      }
+      .tl-row.is-server::before {
+        background: var(--steel-400);
+      }
+
+      .tl-when {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--fg-label);
+        padding-top: 3px;
+      }
+
+      .tl-what {
+        font-size: 15px;
+        color: var(--fg-dim);
+      }
+      .tl-what b {
+        color: var(--fg);
+        font-weight: 500;
+      }
+
+      .tag {
+        display: inline-block;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        border-radius: 999px;
+        padding: 2px 9px;
+        margin-right: 10px;
+        vertical-align: 1px;
+      }
+
+      .tag-user {
+        background: var(--amber-900);
+        border: 1px solid var(--amber-700);
+        color: var(--amber-300);
+      }
+      .tag-agent {
+        background: var(--sage-900);
+        border: 1px solid var(--sage-700);
+        color: var(--sage-300);
+      }
+      .tag-server {
+        background: var(--ink-600);
+        border: 1px solid var(--steel-500);
+        color: var(--steel-200);
+      }
+
+      .answer {
+        background: var(--bg-panel);
+        border: 1px solid var(--border);
+        border-left: 2px solid var(--accent);
+        border-radius: 14px;
+        padding: 24px 28px;
+        margin: 28px 0;
+      }
+
+      .answer .verdict {
+        font-family: var(--font-serif);
+        font-style: italic;
+        font-size: 24px;
+        line-height: 1.3;
+        margin: 0 0 12px;
+      }
+
+      footer {
+        margin-top: 80px;
+        padding-top: 28px;
+        border-top: 1px solid var(--border-subtle);
+        font-size: 14px;
+        color: var(--fg-label);
+      }
+
+      footer p {
+        max-width: none;
+      }
+
+      .brand {
+        font-weight: 750;
+        letter-spacing: 0.02em;
+        color: var(--fg);
+      }
+
+      @media (max-width: 640px) {
+        .page {
+          padding: 40px 20px 72px;
+        }
+        h1 {
+          font-size: 38px;
+        }
+        .lede {
+          font-size: 19px;
+        }
+        .quote {
+          font-size: 22px;
+        }
+        .tl-row {
+          grid-template-columns: 1fr;
+          gap: 4px;
+        }
+        td:first-child {
+          white-space: normal;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <p class="eyebrow">Lavish · architecture</p>
+      <h1>How Lavish works</h1>
+      <p class="lede">
+        Three processes, one mailbox on disk, and an HTTP request that is allowed to take an hour to answer.
+      </p>
+
+      <p>
+        There is no daemon to register with, no socket the agent has to be holding at the right moment, and no message
+        bus. There is a small HTTP server on loopback, a JSON file on disk, and two clients that never speak to each
+        other. Everything else in this document follows from that.
+      </p>
+
+      <h2><span class="num">01</span>Three participants</h2>
+      <p>
+        Your agent and your browser are both clients. Neither can be called; both call the server, whenever it suits
+        them. The server is the only participant that remembers anything.
+      </p>
+
+      <figure>
+        <div class="diagram-scroll">
+          <svg
+            viewBox="0 0 920 330"
+            role="img"
+            aria-label="The agent and the browser are both clients of one local server, which keeps its state in state.json"
+          >
+            <defs>
+              <marker
+                id="a-sage"
+                viewBox="0 0 10 10"
+                refX="9"
+                refY="5"
+                markerWidth="7"
+                markerHeight="7"
+                orient="auto-start-reverse"
+              >
+                <path d="M0,0 L10,5 L0,10 z" fill="#8fe39e" />
+              </marker>
+              <marker
+                id="a-amber"
+                viewBox="0 0 10 10"
+                refX="9"
+                refY="5"
+                markerWidth="7"
+                markerHeight="7"
+                orient="auto-start-reverse"
+              >
+                <path d="M0,0 L10,5 L0,10 z" fill="#e3cf8f" />
+              </marker>
+              <marker
+                id="a-steel"
+                viewBox="0 0 10 10"
+                refX="9"
+                refY="5"
+                markerWidth="7"
+                markerHeight="7"
+                orient="auto-start-reverse"
+              >
+                <path d="M0,0 L10,5 L0,10 z" fill="#8c96aa" />
+              </marker>
+            </defs>
+
+            <!-- agent -->
+            <rect x="20" y="96" width="216" height="104" rx="14" fill="#11141a" stroke="#315f3a" />
+            <text
+              x="128"
+              y="132"
+              text-anchor="middle"
+              font-family="Geist, sans-serif"
+              font-size="15"
+              font-weight="600"
+              fill="#f7f3ea"
+            >
+              Your agent
+            </text>
+            <text
+              x="128"
+              y="156"
+              text-anchor="middle"
+              font-family="Geist Mono, monospace"
+              font-size="12"
+              fill="#8fe39e"
+            >
+              lavish-axi
+            </text>
+            <text x="128" y="178" text-anchor="middle" font-family="Geist, sans-serif" font-size="12" fill="#8c96aa">
+              a CLI. a client.
+            </text>
+
+            <!-- server -->
+            <rect x="352" y="76" width="216" height="144" rx="14" fill="#11141a" stroke="#3c4557" />
+            <text
+              x="460"
+              y="112"
+              text-anchor="middle"
+              font-family="Geist, sans-serif"
+              font-size="15"
+              font-weight="600"
+              fill="#f7f3ea"
+            >
+              The Lavish server
+            </text>
+            <text
+              x="460"
+              y="136"
+              text-anchor="middle"
+              font-family="Geist Mono, monospace"
+              font-size="12"
+              fill="#b9c0cf"
+            >
+              127.0.0.1 · detached
+            </text>
+            <text x="460" y="158" text-anchor="middle" font-family="Geist, sans-serif" font-size="12" fill="#8c96aa">
+              holds the difference
+            </text>
+            <text x="460" y="186" text-anchor="middle" font-family="Geist, sans-serif" font-size="12" fill="#8c96aa">
+              between the two
+            </text>
+
+            <!-- browser -->
+            <rect x="684" y="96" width="216" height="104" rx="14" fill="#11141a" stroke="#5d4d1b" />
+            <text
+              x="792"
+              y="132"
+              text-anchor="middle"
+              font-family="Geist, sans-serif"
+              font-size="15"
+              font-weight="600"
+              fill="#f7f3ea"
+            >
+              Your browser
+            </text>
+            <text
+              x="792"
+              y="156"
+              text-anchor="middle"
+              font-family="Geist Mono, monospace"
+              font-size="12"
+              fill="#e3cf8f"
+            >
+              chrome + artifact
+            </text>
+            <text x="792" y="178" text-anchor="middle" font-family="Geist, sans-serif" font-size="12" fill="#8c96aa">
+              also a client.
+            </text>
+
+            <!-- agent <-> server -->
+            <line
+              x1="240"
+              y1="122"
+              x2="344"
+              y2="122"
+              stroke="#8fe39e"
+              stroke-width="1.5"
+              stroke-dasharray="5 4"
+              marker-end="url(#a-sage)"
+            />
+            <text
+              x="292"
+              y="110"
+              text-anchor="middle"
+              font-family="Geist Mono, monospace"
+              font-size="11"
+              fill="#8c96aa"
+            >
+              poll
+            </text>
+            <line x1="344" y1="174" x2="240" y2="174" stroke="#8fe39e" stroke-width="1.5" marker-end="url(#a-sage)" />
+            <text
+              x="292"
+              y="194"
+              text-anchor="middle"
+              font-family="Geist Mono, monospace"
+              font-size="11"
+              fill="#8c96aa"
+            >
+              feedback
+            </text>
+
+            <!-- browser <-> server -->
+            <line x1="680" y1="122" x2="576" y2="122" stroke="#e3cf8f" stroke-width="1.5" marker-end="url(#a-amber)" />
+            <text
+              x="628"
+              y="110"
+              text-anchor="middle"
+              font-family="Geist Mono, monospace"
+              font-size="11"
+              fill="#8c96aa"
+            >
+              prompts
+            </text>
+            <line x1="576" y1="174" x2="680" y2="174" stroke="#e3cf8f" stroke-width="1.5" marker-end="url(#a-amber)" />
+            <text
+              x="628"
+              y="194"
+              text-anchor="middle"
+              font-family="Geist Mono, monospace"
+              font-size="11"
+              fill="#8c96aa"
+            >
+              SSE
+            </text>
+
+            <!-- state -->
+            <line x1="460" y1="220" x2="460" y2="248" stroke="#8c96aa" stroke-width="1.5" marker-end="url(#a-steel)" />
+            <rect x="330" y="250" width="260" height="52" rx="12" fill="#1c212b" stroke="#303745" />
+            <text
+              x="460"
+              y="272"
+              text-anchor="middle"
+              font-family="Geist Mono, monospace"
+              font-size="12"
+              fill="#f4c95d"
+            >
+              ~/.lavish-axi/state.json
+            </text>
+            <text x="460" y="291" text-anchor="middle" font-family="Geist, sans-serif" font-size="12" fill="#8c96aa">
+              the mailbox
+            </text>
+
+            <!-- no direct link -->
+            <line x1="240" y1="52" x2="880" y2="52" stroke="#2a2f3a" stroke-width="1" stroke-dasharray="2 6" />
+            <text x="560" y="40" text-anchor="middle" font-family="Geist, sans-serif" font-size="12" fill="#8c96aa">
+              no connection here, ever
+            </text>
+          </svg>
+        </div>
+        <figcaption>
+          Two clients, one server, one file. The dotted line at the top is the connection that does not exist.
+        </figcaption>
+      </figure>
+
+      <ul>
+        <li>
+          <strong>Your agent</strong> runs the <code>lavish-axi</code> CLI. It opens a session, it polls, it edits your
+          HTML file on disk. Nothing can call it, so nothing is ever pushed to it.
+        </li>
+        <li>
+          <strong>The Lavish server</strong> is a detached Node process on loopback, spawned by the first CLI command
+          that needs one and reused by every later command whose version matches.
+        </li>
+        <li>
+          <strong>Your browser</strong> loads the chrome page, which frames your artifact in a sandboxed iframe. The
+          iframe has no same-origin access, so even the page you are annotating cannot reach the server directly —
+          everything it wants to say crosses by <code>postMessage</code> and the chrome sends it on.
+        </li>
+      </ul>
+
+      <h2><span class="num">02</span>The file path is the session</h2>
+      <p>
+        There are no session ids to carry around. The canonical path of your HTML file <em>is</em> the identity, and the
+        key is derived from it:
+      </p>
+      <div class="card">
+        <p><code>sessionKey = sha256(realpath(file)).slice(0, 16)</code></p>
+      </div>
+      <p>Three consequences worth holding on to:</p>
+      <ul>
+        <li><code>lavish-axi poll report.html</code> is enough. The agent never has to have been told an id.</li>
+        <li>Two paths to the same file — a symlink, a relative path — collapse to the same session.</li>
+        <li>
+          The key is <strong>derived, not secret</strong>. Anyone who learns the path can compute it, so the server
+          never treats knowing the key as permission. The routes that put words in your mouth — queueing prompts,
+          publishing a share, writing a whiteboard — additionally require a same-origin request, and every request's
+          <code>Host</code>
+          must be one this server answers to.
+        </li>
+      </ul>
+
+      <h2><span class="num">03</span>Once around the loop</h2>
+      <ol>
+        <li>
+          <code>lavish-axi report.html</code> spawns or reuses the server, registers the session, and opens the browser
+          at <code>/session/&lt;key&gt;</code>.
+        </li>
+        <li>
+          The chrome frames <code>/artifact/&lt;key&gt;/index.html</code>. The only change made to your HTML is one
+          appended <code>&lt;script&gt;</code> tag — the annotation SDK. Open the file directly and it is byte-identical
+          apart from that.
+        </li>
+        <li>
+          You click an element or select text. The SDK reports the target to the chrome, the annotation card opens, and
+          the prompt is queued in the tab's <code>sessionStorage</code>. Nothing has left the browser yet.
+        </li>
+        <li>
+          <strong>Send to Agent.</strong> The chrome POSTs the batch to <code>/api/&lt;key&gt;/prompts</code>. The
+          server writes it into <code>state.json</code> and marks the session <code>feedback</code>.
+        </li>
+        <li>
+          <code>lavish-axi poll report.html</code> returns that batch as JSON, with a DOM snapshot and a
+          <code>next_step</code> string telling the agent what to do with it.
+        </li>
+        <li>The agent edits <code>report.html</code> on disk, like any other file.</li>
+        <li>
+          The server's watcher notices the write and emits a <code>reload</code> event over SSE. The chrome reloads the
+          iframe and replays your scroll position and any half-written note.
+        </li>
+        <li>Repeat, until you or the agent ends the session.</li>
+      </ol>
+      <p class="sub">
+        Steps 4 and 5 are not synchronized with each other. Nothing about step 4 requires step 5 to have started, which
+        is the whole subject of section 05.
+      </p>
+
+      <h2><span class="num">04</span>What a poll actually is</h2>
+      <p>
+        <code>GET /api/poll?file=&lt;absolute path&gt;</code>. That is all it is — an ordinary GET the server is allowed
+        to answer late. It takes one of two branches:
+      </p>
+
+      <h3>Mail is waiting</h3>
+      <p>
+        The server reads the session, finds queued prompts (or a fatal artifact failure), removes them from
+        <code>state.json</code>, and returns them. The request never waits at all, however long the mail has been
+        sitting there.
+      </p>
+
+      <h3>The mailbox is empty</h3>
+      <p>
+        The server marks presence <em>listening</em>, registers a listener for this session's <code>feedback</code> and
+        <code>ended</code> events, and holds the socket open. There is no timeout by default. It writes a whitespace
+        byte into the response every so often so nothing along the way decides the connection is dead, then writes the
+        real JSON body when the event finally fires. <code>--timeout-ms</code> exists for tests and debugging, not for
+        the review loop.
+      </p>
+
+      <h2><span class="num">05</span>Can an agent start listening late?</h2>
+
+      <div class="answer">
+        <p class="verdict">Yes — at any time, from any process, with nothing lost.</p>
+        <p>
+          Feedback is a mailbox, not a broadcast. An agent that was not connected when you pressed Send has missed
+          nothing, because there was nothing to miss: what you sent was written to a file, not shouted down a wire.
+        </p>
+      </div>
+
+      <p>Three properties make that true, and each is worth stating separately.</p>
+
+      <h3>Queuing does not need a listener</h3>
+      <p>
+        <code>POST /api/&lt;key&gt;/prompts</code> writes your prompts into <code>state.json</code> and marks the
+        session <code>feedback</code>. If an agent is long-polling, an event wakes it. If no agent has ever polled this
+        session, the write is exactly the same write. The browser's side of the transaction is complete either way,
+        which is why every feedback control stays live even while the panel is telling you that your agent is not
+        listening.
+      </p>
+
+      <h3>A poll reads the mailbox before it decides to wait</h3>
+      <p>
+        The first thing <code>/api/poll</code> does is take whatever is queued. Mail from an hour ago comes back in the
+        first milliseconds of the poll. The long-poll branch — the one that holds the connection — is only reached when
+        the mailbox is already empty.
+      </p>
+
+      <h3>The mailbox outlives the processes</h3>
+      <p>
+        The server stops itself after 30 minutes with no browser and no poll connected
+        (<code>LAVISH_AXI_IDLE_TIMEOUT_MS</code>), and when the last session ends with nothing attached it steps down
+        immediately. <code>state.json</code> is untouched by that. The next <code>lavish-axi poll</code> spawns a fresh
+        server, which reads the same file and hands over the same prompts. A different agent, a different terminal, a
+        machine that has rebooted in between: the path is the identity, so the mail is still addressed correctly.
+      </p>
+
+      <figure>
+        <div class="timeline">
+          <div class="tl-row is-user">
+            <div class="tl-when">10:02</div>
+            <div class="tl-what">
+              <span class="tag tag-user">You</span>Annotate a heading, press <b>Send to Agent</b>. No agent has ever
+              polled this file.
+            </div>
+          </div>
+          <div class="tl-row is-server">
+            <div class="tl-when">10:02</div>
+            <div class="tl-what">
+              <span class="tag tag-server">Server</span>Writes the prompt to <b>state.json</b>, marks the session
+              <b>feedback</b>, emits an event nobody is listening for. Returns 200 to the browser.
+            </div>
+          </div>
+          <div class="tl-row is-user">
+            <div class="tl-when">10:09</div>
+            <div class="tl-what">
+              <span class="tag tag-user">You</span>Send a second batch. Same thing. Two batches now wait.
+            </div>
+          </div>
+          <div class="tl-row is-user">
+            <div class="tl-when">10:20</div>
+            <div class="tl-what">
+              <span class="tag tag-user">You</span>Close the browser tab. The session is not ended, only unattended.
+            </div>
+          </div>
+          <div class="tl-row is-server">
+            <div class="tl-when">10:50</div>
+            <div class="tl-what">
+              <span class="tag tag-server">Server</span>Thirty idle minutes with nothing connected. It shuts itself
+              down. <b>state.json</b> stays exactly as it was.
+            </div>
+          </div>
+          <div class="tl-row is-agent">
+            <div class="tl-when">14:35</div>
+            <div class="tl-what">
+              <span class="tag tag-agent">Agent</span>A brand new agent, in a new terminal, runs
+              <b>lavish-axi poll report.html</b>. The CLI spawns a server, the server reads the same state file.
+            </div>
+          </div>
+          <div class="tl-row is-agent">
+            <div class="tl-when">14:35</div>
+            <div class="tl-what">
+              <span class="tag tag-agent">Agent</span>The poll returns <b>immediately</b> with both batches, in order,
+              plus the DOM snapshot taken at the time. It never enters the waiting branch.
+            </div>
+          </div>
+        </div>
+        <figcaption>Nothing in this timeline is a recovery path. It is the ordinary behavior.</figcaption>
+      </figure>
+
+      <h3>The fine print</h3>
+      <p>Three rules bound the answer, and they are the ones that actually surprise people.</p>
+      <ul>
+        <li>
+          <strong>Delivery consumes.</strong> A batch is handed to exactly one poll and then removed. Two agents polling
+          the same file split the mail between them rather than each receiving a copy, so read the response completely
+          the first time. The one exception is a poll whose client disconnects while the response is in flight: the
+          server puts the batch back, ahead of anything queued in the meantime, and marks nothing as delivered.
+          Re-running an interrupted poll is always safe.
+        </li>
+        <li>
+          <strong>An ended session takes no new mail, but still delivers the old.</strong> Prompts queued before the end
+          — including the browser's <em>Send &amp; end session</em>, which posts the final batch and the end together —
+          are handed to the next poll with <code>session_ended: true</code>. A batch posted after the end is refused,
+          because no later poll would ever read it.
+        </li>
+        <li>
+          <strong>Presence is cosmetic.</strong> The browser is told whether an agent is attached and says so in the
+          panel. It gates nothing.
+        </li>
+      </ul>
+
+      <h2><span class="num">06</span>Presence, and what it does not mean</h2>
+      <p>
+        The chrome holds an SSE stream to the server and is told one of three states. All three are derived from live
+        connections alone — never from what is queued, and never from session status.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>State</th>
+            <th>Means</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>waiting</strong></td>
+            <td>
+              No poll is attached. The panel shows a line asking you to have your agent poll. Your feedback still queues
+              normally.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>listening</strong></td>
+            <td>A poll is holding a connection open right now. Anything you send wakes it within milliseconds.</td>
+          </tr>
+          <tr>
+            <td><strong>working</strong></td>
+            <td>
+              A poll took feedback and released. The agent is presumably editing. It returns to <em>waiting</em> when
+              the agent posts a reply, or immediately if the batch ended the session.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2><span class="num">07</span>What can never wake an agent</h2>
+      <p>
+        Lavish runs a layout audit inside the artifact iframe on every render and reports what it finds to the server.
+        That route deliberately never emits the event a poll waits on. Findings land in your <em>Layout issues</em>
+        inbox and stay there until you select them and queue them, at which point they arrive at the agent as an
+        ordinary prompt like any other. An agent cannot be woken by a machine's opinion of your layout — only by you.
+      </p>
+      <p>
+        The single exception is narrow and fatal: the artifact itself failed to load, or one of its subresources did.
+        There is nothing to review in that case, so it is returned as <code>artifact_failures</code> without waiting for
+        a human.
+      </p>
+
+      <blockquote class="quote">Detection is passive. Repair is requested.</blockquote>
+
+      <h2><span class="num">08</span>The other direction: live reload</h2>
+      <p>The agent never pushes anything to the browser either. It writes the file, and the server notices.</p>
+      <div class="chain">
+        <span class="chain-step">Agent writes<em>report.html</em></span>
+        <span class="chain-arrow">→</span>
+        <span class="chain-step">Watcher fires<em>chokidar, debounced</em></span>
+        <span class="chain-arrow">→</span>
+        <span class="chain-step">Server emits<em>SSE: reload</em></span>
+        <span class="chain-arrow">→</span>
+        <span class="chain-step">Chrome reloads<em>the iframe only</em></span>
+        <span class="chain-arrow">→</span>
+        <span class="chain-step">State replayed<em>scroll, open draft</em></span>
+      </div>
+      <p class="sub">
+        Only the artifact file is watched by default. Watching whole directories saturated the event loop for artifacts
+        living inside large trees, so directory watching is opt-in per artifact.
+      </p>
+
+      <h2><span class="num">09</span>What survives what</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Event</th>
+            <th>What happens</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Browser refresh</strong></td>
+            <td>
+              Session, queued prompts, layout inbox and your unsent annotation draft all come back. The inbox is
+              re-bootstrapped from the server, the draft from the tab's own storage.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Closing the tab</strong></td>
+            <td>
+              Nothing sent is lost. Presence drops to <em>waiting</em>. Anything you queued but never sent lived only in
+              that tab.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Server idle shutdown</strong></td>
+            <td>
+              The process stops; the session is untouched on disk. Session status is never changed by an idle shutdown,
+              so the next open or poll resumes it.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Poll killed or timed out</strong></td>
+            <td>
+              Undelivered feedback stays queued. Re-run the same poll command. The CLI prints that instruction to stderr
+              on its way out.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>You end the session</strong></td>
+            <td>
+              Terminal. Every connected browser goes read-only at once. A plain re-open is refused; it takes an explicit
+              <code>--reopen</code>.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>The agent ends it</strong></td>
+            <td>Also terminal, but a later <code>lavish-axi report.html</code> revives it without a flag.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2><span class="num">10</span>Everything else, briefly</h2>
+      <ul>
+        <li>
+          <strong>The sandbox.</strong> The artifact iframe runs without <code>allow-same-origin</code>, so it cannot
+          read the chrome's DOM or call the server. Every message crosses by <code>postMessage</code>, stamped with the
+          current load token.
+        </li>
+        <li>
+          <strong>Layout inbox.</strong> Findings are fingerprinted per rule, target and viewport class, and only a
+          newer artifact load plus a complete audit at the same viewport can clear one. Not a closed drawer, not a
+          queued fix, not an agent's reply.
+        </li>
+        <li>
+          <strong>Whiteboards.</strong> Mermaid diagrams become editable Excalidraw scenes in a second sandboxed frame.
+          Scenes autosave to sidecar files; the Mermaid source in your HTML stays authoritative and there is no reverse
+          conversion.
+        </li>
+        <li>
+          <strong>Image attachments.</strong> Content-addressed by their own hash. The iframe hands bytes to the chrome,
+          the chrome uploads, and the server re-derives every authoritative field from disk, so a crafted prompt cannot
+          aim an attachment at an arbitrary file.
+        </li>
+        <li>
+          <strong>Export and sharing.</strong> One transform inlines local assets into a single self-contained file,
+          makes no outbound requests, and strips the SDK. Sharing publishes that file to a third-party host; local paths
+          are redacted first.
+        </li>
+      </ul>
+
+      <footer>
+        <p>
+          <span class="brand">Lavish</span> · the invariants behind each of these sections, and the failure modes they
+          exist to prevent, live in <code>AGENTS.md</code> at the repository root. The user-facing contract lives in
+          <code>README.md</code>.
+        </p>
+        <p>Read this page the way it was meant to be read: <code>lavish-axi docs/architecture.html</code>.</p>
+      </footer>
+    </main>
+  </body>
+</html>
